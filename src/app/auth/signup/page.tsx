@@ -1,14 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
-import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 import Link from 'next/link'
-import CricketLogo from '@/components/CricketLogo'
-import { signupSchema, type SignupFormData } from '@/lib/validation'
 
 export default function SignUpPage() {
-  const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [fullName, setFullName] = useState('')
@@ -16,86 +11,14 @@ export default function SignUpPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
-  const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof SignupFormData, string>>>({})
-  const [renderError, setRenderError] = useState<string | null>(null)
-
-  useEffect(() => {
-    try {
-      console.log('Supabase client initialized')
-    } catch (e: any) {
-      setRenderError('Error initializing: ' + e.message)
-    }
-  }, [])
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
     setMessage(null)
-    setFieldErrors({})
-
-    try {
-      const formData: SignupFormData = { email, password, fullName, role }
-      const validationResult = signupSchema.safeParse(formData)
-
-      if (!validationResult.success) {
-        const errors = validationResult.error.flatten().fieldErrors
-        setFieldErrors(errors as Partial<Record<keyof SignupFormData, string>>)
-        setError('Please fix the validation errors')
-        setLoading(false)
-        return
-      }
-
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-            role: role,
-          },
-          emailRedirectTo: window.location.origin + '/auth/login',
-        },
-      })
-
-      if (error) throw error
-
-      if (data.user) {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            id: data.user.id,
-            full_name: fullName,
-            role: role,
-          })
-        
-        if (profileError) {
-          setMessage('Account created! Profile setup will be completed automatically.')
-        } else {
-          setMessage('Account created! Redirecting to profile creation...')
-          setTimeout(() => {
-            router.push('/profile/create')
-          }, 2000)
-        }
-      } else {
-        setMessage('Account created! Please check your email to confirm your account before signing in.')
-      }
-    } catch (error: any) {
-      setError(error.message)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  if (renderError) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-900">
-        <div className="text-center text-red-400">
-          <h1 className="text-2xl font-bold mb-4">Render Error</h1>
-          <p>{renderError}</p>
-        </div>
-      </div>
-    )
+    // Placeholder for actual signup logic
+    setLoading(false)
   }
 
   return (
@@ -107,14 +30,6 @@ export default function SignUpPage() {
 
       <div className="max-w-md w-full space-y-8 relative z-10">
         <div className="text-center">
-          <div className="flex justify-center mb-6">
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-blue-600 rounded-full blur-xl opacity-50"></div>
-              <div className="relative bg-slate-800 rounded-full p-4 border-2 border-yellow-400">
-                <CricketLogo size="md" showText={false} />
-              </div>
-            </div>
-          </div>
           <h2 className="text-3xl font-bold text-white mb-2">
             Join <span className="text-yellow-400">Peakform</span>
           </h2>
@@ -155,13 +70,10 @@ export default function SignUpPage() {
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     required
-                    className={`appearance-none relative block w-full pl-10 pr-3 py-3 border bg-slate-700 bg-opacity-50 text-white placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all ${fieldErrors.fullName ? 'border-red-500' : 'border-slate-600'}`}
+                    className="appearance-none relative block w-full pl-10 pr-3 py-3 border bg-slate-700 bg-opacity-50 text-white placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all border-slate-600"
                     placeholder="Enter your full name"
                   />
                 </div>
-                {fieldErrors.fullName && (
-                  <p className="mt-1 text-sm text-red-400">{fieldErrors.fullName}</p>
-                )}
               </div>
 
               <div>
@@ -181,15 +93,12 @@ export default function SignUpPage() {
                     type="email"
                     autoComplete="email"
                     required
-                    className={`appearance-none relative block w-full pl-10 pr-3 py-3 border bg-slate-700 bg-opacity-50 text-white placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all ${fieldErrors.email ? 'border-red-500' : 'border-slate-600'}`}
+                    className="appearance-none relative block w-full pl-10 pr-3 py-3 border bg-slate-700 bg-opacity-50 text-white placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all border-slate-600"
                     placeholder="Enter your email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                   />
                 </div>
-                {fieldErrors.email && (
-                  <p className="mt-1 text-sm text-red-400">{fieldErrors.email}</p>
-                )}
               </div>
 
               <div>
@@ -208,15 +117,12 @@ export default function SignUpPage() {
                     type="password"
                     autoComplete="new-password"
                     required
-                    className={`appearance-none relative block w-full pl-10 pr-3 py-3 border bg-slate-700 bg-opacity-50 text-white placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all ${fieldErrors.password ? 'border-red-500' : 'border-slate-600'}`}
+                    className="appearance-none relative block w-full pl-10 pr-3 py-3 border bg-slate-700 bg-opacity-50 text-white placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all border-slate-600"
                     placeholder="Create a strong password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                   />
                 </div>
-                {fieldErrors.password && (
-                  <p className="mt-1 text-sm text-red-400">{fieldErrors.password}</p>
-                )}
               </div>
 
               <div>
@@ -272,12 +178,9 @@ export default function SignUpPage() {
             <div className="text-center">
               <p className="text-gray-400 text-sm">
                 Already have an account?{' '}
-                <button
-                  onClick={() => router.push('/auth/login')}
-                  className="font-medium text-yellow-400 hover:text-yellow-300 transition-colors"
-                >
+                <Link href="/auth/login" className="font-medium text-yellow-400 hover:text-yellow-300 transition-colors">
                   Sign in here
-                </button>
+                </Link>
               </p>
             </div>
           </form>

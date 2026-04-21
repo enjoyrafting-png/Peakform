@@ -1,94 +1,20 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
-import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 import Link from 'next/link'
-import CricketLogo from '@/components/CricketLogo'
-import { loginSchema, type LoginFormData } from '@/lib/validation'
 
 export default function LoginPage() {
-  const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof LoginFormData, string>>>({})
-  const [renderError, setRenderError] = useState<string | null>(null)
-
-  useEffect(() => {
-    try {
-      // Test if Supabase client is working
-      console.log('Supabase client initialized')
-    } catch (e: any) {
-      setRenderError('Error initializing: ' + e.message)
-    }
-  }, [])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
-    setFieldErrors({})
-
-    try {
-      const formData: LoginFormData = { email, password }
-      const validationResult = loginSchema.safeParse(formData)
-
-      if (!validationResult.success) {
-        const errors = validationResult.error.flatten().fieldErrors
-        setFieldErrors(errors as Partial<Record<keyof LoginFormData, string>>)
-        setError('Please fix the validation errors')
-        setLoading(false)
-        return
-      }
-
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
-
-      if (error) {
-        setError(error.message)
-        return
-      }
-
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('id, username, full_name, avatar_url, website, role, created_at, updated_at')
-        .eq('id', data.user?.id)
-        .single()
-
-      if (profileError) {
-        if (profileError.code === 'PGRST116') {
-          router.push('/profile/create')
-        } else {
-          setError('Error checking profile: ' + profileError.message)
-        }
-        return
-      }
-
-      if (!profile) {
-        router.push('/profile/create')
-      } else {
-        router.push('/dashboard')
-      }
-    } catch (err: any) {
-      setError('An unexpected error occurred. Please try again.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  if (renderError) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-900">
-        <div className="text-center text-red-400">
-          <h1 className="text-2xl font-bold mb-4">Render Error</h1>
-          <p>{renderError}</p>
-        </div>
-      </div>
-    )
+    // Placeholder for actual login logic
+    setLoading(false)
   }
 
   return (
@@ -101,8 +27,7 @@ export default function LoginPage() {
       <div className="relative z-10 flex min-h-screen items-center justify-center">
         <div className="max-w-md w-full space-y-8">
           <div className="text-center">
-            <CricketLogo size="xl" className="mx-auto mb-6" />
-            <h2 className="text-3xl font-bold text-white">
+            <h2 className="text-3xl font-bold text-white mb-4">
               Sign in to Peakform
             </h2>
             <p className="text-sm text-gray-400">Don&apos;t have an account?</p>
@@ -125,12 +50,9 @@ export default function LoginPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className={`w-full px-4 py-3 bg-slate-700 bg-opacity-50 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all ${fieldErrors.email ? 'border-red-500' : 'border-slate-600'}`}
+                  className="w-full px-4 py-3 bg-slate-700 bg-opacity-50 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all border-slate-600"
                   placeholder="Enter your email"
                 />
-                {fieldErrors.email && (
-                  <p className="mt-1 text-sm text-red-400">{fieldErrors.email}</p>
-                )}
               </div>
 
               <div>
@@ -145,12 +67,9 @@ export default function LoginPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className={`w-full px-4 py-3 bg-slate-700 bg-opacity-50 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all ${fieldErrors.password ? 'border-red-500' : 'border-slate-600'}`}
+                  className="w-full px-4 py-3 bg-slate-700 bg-opacity-50 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all border-slate-600"
                   placeholder="Enter your password"
                 />
-                {fieldErrors.password && (
-                  <p className="mt-1 text-sm text-red-400">{fieldErrors.password}</p>
-                )}
               </div>
 
               {error && (
