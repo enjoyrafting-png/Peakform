@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import CricketLogo from '@/components/CricketLogo'
 import { useEffect } from 'react'
 import { loginSchema, type LoginFormData } from '@/lib/validation'
@@ -170,17 +171,17 @@ export default function LoginPage() {
               </div>
 
               <div className="text-center">
-                <a href="/auth/forgot-password" className="text-sm text-yellow-400 hover:text-yellow-300 transition-colors">
+                <Link href="/auth/forgot-password" className="text-sm text-yellow-400 hover:text-yellow-300 transition-colors">
                   Forgot password?
-                </a>
+                </Link>
               </div>
 
               <div className="text-center">
                 <p className="text-gray-300">
                   Don&apos;t have an account?{' '}
-                  <a href="/auth/signup" className="font-medium text-yellow-400 hover:text-yellow-300 transition-colors">
+                  <Link href="/auth/signup" className="font-medium text-yellow-400 hover:text-yellow-300 transition-colors">
                     Sign up
-                  </a>
+                  </Link>
                 </p>
               </div>
             </form>

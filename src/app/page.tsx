@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import CricketLogo from '@/components/CricketLogo'
 import Image from 'next/image'
 
@@ -34,12 +35,12 @@ export default function Home() {
                 <a href="#about" className="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors">
                   About
                 </a>
-                <a href="/auth/login" className="text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                <Link href="/auth/login" className="text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md text-sm font-medium transition-colors">
                   Sign In
-                </a>
-                <a href="/auth/signup" className="text-gray-900 border-2 border-blue-600 hover:bg-blue-600 hover:text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                </Link>
+                <Link href="/auth/signup" className="text-gray-900 border-2 border-blue-600 hover:bg-blue-600 hover:text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
                   Sign Up
-                </a>
+                </Link>
               </div>
             </div>
           </div>
@@ -62,18 +63,18 @@ export default function Home() {
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4">
-                <a 
+                <Link 
                   href="/auth/signup" 
                   className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-gray-900 px-8 py-4 rounded-lg font-bold text-lg hover:from-yellow-500 hover:to-yellow-700 transition-all transform hover:scale-105 shadow-xl"
                 >
                   Start Your Journey
-                </a>
-                <a 
+                </Link>
+                <Link 
                   href="/auth/login" 
                   className="border-2 border-blue-600 text-gray-900 px-8 py-4 rounded-lg font-bold text-lg hover:bg-blue-600 hover:text-white transition-all transform hover:scale-105"
                 >
                   Sign In
-                </a>
+                </Link>
               </div>
 
               <div className="grid grid-cols-3 gap-8 pt-8">
@@ -278,18 +279,18 @@ export default function Home() {
             Join thousands of international cricket players who have elevated their game with Peakform
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a 
+            <Link 
               href="/auth/signup" 
               className="bg-yellow-400 text-gray-900 px-8 py-4 rounded-lg font-bold text-lg hover:bg-yellow-500 transition-all transform hover:scale-105 shadow-xl"
             >
               Sign Up
-            </a>
-            <a 
+            </Link>
+            <Link 
               href="/auth/login" 
               className="border-2 border-white text-white px-8 py-4 rounded-lg font-bold text-lg hover:bg-white hover:text-blue-800 transition-all transform hover:scale-105"
             >
               Sign In
-            </a>
+            </Link>
           </div>
         </div>
       </section>
