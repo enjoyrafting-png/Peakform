@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import CricketLogo from '@/components/CricketLogo'
-import { useEffect } from 'react'
 import { signupSchema, type SignupFormData } from '@/lib/validation'
 
 export default function SignUpPage() {
@@ -16,12 +15,7 @@ export default function SignUpPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
-  const [isLoaded, setIsLoaded] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof SignupFormData, string>>>({})
-
-  useEffect(() => {
-    setIsLoaded(true)
-  }, [])
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -108,7 +102,7 @@ export default function SignUpPage() {
         <div className="absolute inset-0 bg-pattern"></div>
       </div>
 
-      <div className={`max-w-md w-full space-y-8 relative z-10 ${isLoaded ? 'animate-fade-in-up' : 'opacity-0'}`}>
+      <div className="max-w-md w-full space-y-8 relative z-10">
         {/* Header */}
         <div className="text-center">
           <div className="flex justify-center mb-6">

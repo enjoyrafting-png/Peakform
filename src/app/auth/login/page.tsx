@@ -5,7 +5,6 @@ import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import CricketLogo from '@/components/CricketLogo'
-import { useEffect } from 'react'
 import { loginSchema, type LoginFormData } from '@/lib/validation'
 
 export default function LoginPage() {
@@ -14,12 +13,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [isLoaded, setIsLoaded] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof LoginFormData, string>>>({})
-
-  useEffect(() => {
-    setIsLoaded(true)
-  }, [])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -90,7 +84,7 @@ export default function LoginPage() {
       </div>
 
       <div className="relative z-10 flex min-h-screen items-center justify-center">
-        <div className={`max-w-md w-full space-y-8 ${isLoaded ? 'animate-fade-in-up' : 'opacity-0'}`}>
+        <div className="max-w-md w-full space-y-8">
           <div className="text-center">
             <CricketLogo size="xl" className="mx-auto mb-6" />
             <h2 className="text-3xl font-bold text-white">
