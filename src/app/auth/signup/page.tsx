@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import CricketLogo from '@/components/CricketLogo'
 import { signupSchema, type SignupFormData } from '@/lib/validation'
 
@@ -16,6 +17,14 @@ export default function SignUpPage() {
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof SignupFormData, string>>>({})
+  const [envError, setEnvError] = useState<string | null>(null)
+
+  useEffect(() => {
+    // Check if environment variables are set
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      setEnvError('Environment variables not configured. Please contact support.')
+    }
+  }, [])
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -92,6 +101,20 @@ export default function SignUpPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  if (envError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center px-4 sm:px-6 lg:px-8">
+        <div className="bg-red-900 bg-opacity-50 border border-red-700 rounded-lg p-8 max-w-md text-center">
+          <h2 className="text-2xl font-bold text-white mb-4">Configuration Error</h2>
+          <p className="text-red-300">{envError}</p>
+          <Link href="/" className="block mt-4 text-yellow-400 hover:text-yellow-300">
+            Return to Home
+          </Link>
+        </div>
+      </div>
+    )
   }
 
   return (
