@@ -1,9 +1,13 @@
 'use client'
 
 import { useState } from 'react'
+import { supabase } from '@/lib/supabase'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { signupSchema, type SignupFormData } from '@/lib/validation'
 
 export default function SignUpPage() {
+  const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [fullName, setFullName] = useState('')
@@ -11,14 +15,66 @@ export default function SignUpPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof SignupFormData, string>>>({})
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
     setMessage(null)
-    // Placeholder for actual signup logic
-    setLoading(false)
+    setFieldErrors({})
+
+    try {
+      const formData: SignupFormData = { email, password, fullName, role }
+      const validationResult = signupSchema.safeParse(formData)
+
+      if (!validationResult.success) {
+        const errors = validationResult.error.flatten().fieldErrors
+        setFieldErrors(errors as Partial<Record<keyof SignupFormData, string>>)
+        setError('Please fix the validation errors')
+        setLoading(false)
+        return
+      }
+
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+            role: role,
+          },
+          emailRedirectTo: window.location.origin + '/auth/login',
+        },
+      })
+
+      if (error) throw error
+
+      if (data.user) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: data.user.id,
+            full_name: fullName,
+            role: role,
+          })
+        
+        if (profileError) {
+          setMessage('Account created! Profile setup will be completed automatically.')
+        } else {
+          setMessage('Account created! Redirecting to profile creation...')
+          setTimeout(() => {
+            router.push('/profile/create')
+          }, 2000)
+        }
+      } else {
+        setMessage('Account created! Please check your email to confirm your account before signing in.')
+      }
+    } catch (error: any) {
+      setError(error.message)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -70,10 +126,13 @@ export default function SignUpPage() {
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     required
-                    className="appearance-none relative block w-full pl-10 pr-3 py-3 border bg-slate-700 bg-opacity-50 text-white placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all border-slate-600"
+                    className={`appearance-none relative block w-full pl-10 pr-3 py-3 border bg-slate-700 bg-opacity-50 text-white placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all ${fieldErrors.fullName ? 'border-red-500' : 'border-slate-600'}`}
                     placeholder="Enter your full name"
                   />
                 </div>
+                {fieldErrors.fullName && (
+                  <p className="mt-1 text-sm text-red-400">{fieldErrors.fullName}</p>
+                )}
               </div>
 
               <div>
@@ -93,12 +152,15 @@ export default function SignUpPage() {
                     type="email"
                     autoComplete="email"
                     required
-                    className="appearance-none relative block w-full pl-10 pr-3 py-3 border bg-slate-700 bg-opacity-50 text-white placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all border-slate-600"
+                    className={`appearance-none relative block w-full pl-10 pr-3 py-3 border bg-slate-700 bg-opacity-50 text-white placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all ${fieldErrors.email ? 'border-red-500' : 'border-slate-600'}`}
                     placeholder="Enter your email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                   />
                 </div>
+                {fieldErrors.email && (
+                  <p className="mt-1 text-sm text-red-400">{fieldErrors.email}</p>
+                )}
               </div>
 
               <div>
@@ -117,12 +179,15 @@ export default function SignUpPage() {
                     type="password"
                     autoComplete="new-password"
                     required
-                    className="appearance-none relative block w-full pl-10 pr-3 py-3 border bg-slate-700 bg-opacity-50 text-white placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all border-slate-600"
+                    className={`appearance-none relative block w-full pl-10 pr-3 py-3 border bg-slate-700 bg-opacity-50 text-white placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all ${fieldErrors.password ? 'border-red-500' : 'border-slate-600'}`}
                     placeholder="Create a strong password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                   />
                 </div>
+                {fieldErrors.password && (
+                  <p className="mt-1 text-sm text-red-400">{fieldErrors.password}</p>
+                )}
               </div>
 
               <div>

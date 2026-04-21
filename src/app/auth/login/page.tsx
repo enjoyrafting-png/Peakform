@@ -1,20 +1,72 @@
 'use client'
 
 import { useState } from 'react'
+import { supabase } from '@/lib/supabase'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { loginSchema, type LoginFormData } from '@/lib/validation'
 
 export default function LoginPage() {
+  const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof LoginFormData, string>>>({})
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
-    // Placeholder for actual login logic
-    setLoading(false)
+    setFieldErrors({})
+
+    try {
+      const formData: LoginFormData = { email, password }
+      const validationResult = loginSchema.safeParse(formData)
+
+      if (!validationResult.success) {
+        const errors = validationResult.error.flatten().fieldErrors
+        setFieldErrors(errors as Partial<Record<keyof LoginFormData, string>>)
+        setError('Please fix the validation errors')
+        setLoading(false)
+        return
+      }
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (error) {
+        setError(error.message)
+        return
+      }
+
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, username, full_name, avatar_url, website, role, created_at, updated_at')
+        .eq('id', data.user?.id)
+        .single()
+
+      if (profileError) {
+        if (profileError.code === 'PGRST116') {
+          router.push('/profile/create')
+        } else {
+          setError('Error checking profile: ' + profileError.message)
+        }
+        return
+      }
+
+      if (!profile) {
+        router.push('/profile/create')
+      } else {
+        router.push('/dashboard')
+      }
+    } catch (err: any) {
+      setError('An unexpected error occurred. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -50,9 +102,12 @@ export default function LoginPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-700 bg-opacity-50 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all border-slate-600"
+                  className={`w-full px-4 py-3 bg-slate-700 bg-opacity-50 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all ${fieldErrors.email ? 'border-red-500' : 'border-slate-600'}`}
                   placeholder="Enter your email"
                 />
+                {fieldErrors.email && (
+                  <p className="mt-1 text-sm text-red-400">{fieldErrors.email}</p>
+                )}
               </div>
 
               <div>
@@ -67,9 +122,12 @@ export default function LoginPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-700 bg-opacity-50 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all border-slate-600"
+                  className={`w-full px-4 py-3 bg-slate-700 bg-opacity-50 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all ${fieldErrors.password ? 'border-red-500' : 'border-slate-600'}`}
                   placeholder="Enter your password"
                 />
+                {fieldErrors.password && (
+                  <p className="mt-1 text-sm text-red-400">{fieldErrors.password}</p>
+                )}
               </div>
 
               {error && (
