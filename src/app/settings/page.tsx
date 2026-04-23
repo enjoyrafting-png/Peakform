@@ -184,15 +184,6 @@ export default function SettingsPage() {
     }
   }
 
-  const handleSignOut = async () => {
-    try {
-      await supabase.auth.signOut()
-      router.push('/auth/login')
-    } catch (err) {
-      // Error handling without console logging
-    }
-  }
-
   const menuItems = [
     { name: 'Dashboard', icon: 'Dashboard', path: '/dashboard' },
     { name: 'Profile', icon: 'Profile', path: '/profile/view' },
