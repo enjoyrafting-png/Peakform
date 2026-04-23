@@ -119,7 +119,7 @@ export default function SchedulePage() {
   }
 
   const enhanceWithAI = async () => {
-    if (!formData.notes.trim()) return
+    if (!formData.notes || !formData.notes.trim()) return
 
     setIsEnhancing(true)
     try {
@@ -130,14 +130,14 @@ export default function SchedulePage() {
       }).then(res => res.json())
       .then(data => data.enhanced || formData.notes)
       .catch(() => {
-        return formData.notes
+        return formData.notes || ''
           .replace(/\s+/g, ' ')
           .trim()
       })
 
       setFormData(prev => ({ ...prev, notes: enhanced }))
     } catch (err) {
-      const cleaned = formData.notes.replace(/\s+/g, ' ').trim()
+      const cleaned = (formData.notes || '').replace(/\s+/g, ' ').trim()
       setFormData(prev => ({ ...prev, notes: cleaned }))
     } finally {
       setIsEnhancing(false)
@@ -832,7 +832,7 @@ export default function SchedulePage() {
                           <button
                             type="button"
                             onClick={enhanceWithAI}
-                            disabled={isEnhancing || !formData.notes.trim()}
+                            disabled={isEnhancing || !formData.notes?.trim()}
                             className="p-2 rounded-lg bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             title="Enhance with AI"
                           >
