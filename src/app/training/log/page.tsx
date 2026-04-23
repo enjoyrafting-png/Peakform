@@ -567,7 +567,7 @@ export default function TrainingLogPage() {
             <div className="bg-slate-800 bg-opacity-50 backdrop-blur-lg rounded-2xl shadow-2xl border border-slate-700 p-8">
               <h2 className="text-2xl font-bold text-white mb-6">
                 Training History
-                {searchQuery && <span className="text-gray-400 text-lg ml-4">Search: "{searchQuery}"</span>}
+                {searchQuery && <span className="text-gray-400 text-lg ml-4">Search: &apos;{searchQuery}&apos;</span>}
               </h2>
 
               {filteredLogs.length === 0 ? (
