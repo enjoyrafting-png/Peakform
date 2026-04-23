@@ -270,10 +270,12 @@ export default function SchedulePage() {
         return
       }
 
+      const targetUserId = profile?.role === 'coach' && selectedAthlete ? selectedAthlete : user.id
+
       const { error } = await supabase
         .from('match_stats')
         .insert({
-          user_id: user.id,
+          user_id: targetUserId,
           match_date: formData.match_date,
           opponent: formData.opponent,
           venue: formData.venue,
@@ -326,11 +328,11 @@ export default function SchedulePage() {
         })
         setShowForm(false)
         
-        // Refresh match stats
+        // Refresh match stats using the same targetUserId
         const { data: refreshedData } = await supabase
           .from('match_stats')
           .select('id, match_date, opponent, venue, runs_scored, wickets_taken, overs_bowled, catches, run_out, man_of_match, bowling_figures, batting_figures, match_result, notes, created_at')
-          .eq('user_id', user.id)
+          .eq('user_id', targetUserId)
           .order('match_date', { ascending: false })
         
         setMatchStats(refreshedData || [])
