@@ -161,7 +161,14 @@ export default function SchedulePage() {
       if (!validationResult.success) {
         const errors = validationResult.error.flatten().fieldErrors
         setFieldErrors(errors as Partial<Record<keyof MatchStatsFormData, string>>)
-        alert('Please fix the validation errors')
+        
+        // Show specific validation errors in alert
+        const errorMessages = Object.entries(errors)
+          .filter(([_, msgs]) => msgs && msgs.length > 0)
+          .map(([field, msgs]) => `${field}: ${msgs?.join(', ')}`)
+          .join('\n')
+        
+        alert(`Please fix the following validation errors:\n\n${errorMessages}`)
         setLoading(false)
         return
       }
