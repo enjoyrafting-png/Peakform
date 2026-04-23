@@ -44,7 +44,7 @@ export default function SignUpPage() {
             full_name: fullName,
             role: role,
           },
-          emailRedirectTo: window.location.origin + '/auth/login',
+          emailRedirectTo: typeof window !== 'undefined' ? window.location.origin + '/auth/login' : '/auth/login',
         },
       })
 
