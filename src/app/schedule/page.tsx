@@ -275,6 +275,15 @@ export default function SchedulePage() {
     }
   }
 
+  const handleSignOut = async () => {
+    try {
+      await supabase.auth.signOut()
+      router.push('/')
+    } catch (err) {
+      // Error handling without console logging
+    }
+  }
+
   const menuItems = [
     { name: 'Dashboard', icon: 'Dashboard', path: '/dashboard' },
     { name: 'Profile', icon: 'Profile', path: '/profile/view' },
@@ -380,6 +389,13 @@ export default function SchedulePage() {
             <button className="p-1.5 rounded-full bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-gray-900 border border-yellow-500 transition-all" title="Upgrade to Pro">
               <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
+              </svg>
+            </button>
+            
+            {/* Sign Out */}
+            <button onClick={handleSignOut} className="p-1.5 rounded-full bg-slate-800 bg-opacity-50 backdrop-blur-lg border border-slate-600 hover:bg-red-600 hover:border-red-500 transition-all" title="Sign Out">
+              <svg className="w-3.5 h-3.5 text-gray-300 hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>
             </button>
             

@@ -60,6 +60,15 @@ interface PartialMatchStats {
 
 export default function AIAnalysisPage() {
   const router = useRouter()
+
+  const handleSignOut = async () => {
+    try {
+      await supabase.auth.signOut()
+      router.push('/')
+    } catch (err) {
+      // Error handling
+    }
+  }
   const [loading, setLoading] = useState(false)
   const [trainingLogs, setTrainingLogs] = useState<TrainingLog[]>([])
   const [fitnessData, setFitnessData] = useState<FitnessData[]>([])
@@ -418,8 +427,15 @@ ${buildMatchPerformance()}
               </svg>
             </button>
             
+            {/* Sign Out */}
+            <button onClick={handleSignOut} className="p-1.5 rounded-full bg-slate-800 bg-opacity-50 backdrop-blur-lg border border-slate-600 hover:bg-red-600 hover:border-red-500 transition-all" title="Sign Out">
+              <svg className="w-3.5 h-3.5 text-gray-300 hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+            </button>
+            
             {/* User Profile Circle */}
-            <button className="w-7 h-7 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center border-2 border-cyan-500/30 hover:border-yellow-400 transition-all" title="Profile">
+            <button className="w-7 h-7 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center border-2 border-slate-600 hover:border-yellow-400 transition-all" title="Profile">
               <span className="text-white text-xs font-bold">{profile?.full_name ? profile.full_name.charAt(0).toUpperCase() : 'U'}</span>
             </button>
           </div>
