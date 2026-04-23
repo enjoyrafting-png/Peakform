@@ -129,6 +129,8 @@ export default function SchedulePage() {
       ...prev,
       [name]: type === 'checkbox' 
         ? (e.target as HTMLInputElement).checked 
+        : type === 'number'
+        ? value === '' ? 0 : Number(value)
         : value
     }))
   }
