@@ -207,10 +207,11 @@ export default function TrainingLogPage() {
   }, [router, selectedAthlete])
 
   const handleInputChange = (e: any) => {
-    const { name, value } = e.target
+    const { name, value, type } = e.target
+    const processedValue = type === 'number' ? (value === '' ? 0 : Number(value)) : value
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: processedValue
     }))
   }
 
@@ -224,7 +225,7 @@ export default function TrainingLogPage() {
       const validationData: TrainingLogFormData = {
         date: formData.date,
         session_type: formData.session_type,
-        intensity: formData.intensity as 'low' | 'moderate' | 'high',
+        intensity: formData.intensity as 'low' | 'moderate' | 'high' | 'maximum',
         duration: formData.duration || 0,
         performance_notes: formData.performance_notes || '',
         coach_notes: formData.coach_notes || ''

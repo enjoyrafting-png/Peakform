@@ -31,7 +31,7 @@ export const profileSchema = z.object({
 export const trainingLogSchema = z.object({
   date: z.string().min(1, 'Date is required'),
   session_type: z.string().min(1, 'Session type is required'),
-  intensity: z.enum(['low', 'moderate', 'high']),
+  intensity: z.enum(['low', 'moderate', 'high', 'maximum']),
   duration: z.number().min(0, 'Duration must be a positive number'),
   performance_notes: z.string().optional(),
   coach_notes: z.string().optional()
