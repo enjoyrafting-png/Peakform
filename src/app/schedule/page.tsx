@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import CricketLogo from '@/components/CricketLogo'
+import SearchModal from '@/components/SearchModal'
 import { matchStatsSchema, type MatchStatsFormData } from '@/lib/validation'
 import { useCoachAthletes } from '@/hooks/useCoachAthletes'
 import { handleError, getErrorMessage } from '@/lib/errorHandler'
@@ -31,9 +32,11 @@ export default function SchedulePage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [matchStats, setMatchStats] = useState<MatchStats[]>([])
+  const [filteredMatchStats, setFilteredMatchStats] = useState<MatchStats[]>([])
   const [isLoaded, setIsLoaded] = useState(true)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [showForm, setShowForm] = useState(false)
+  const [showSearchModal, setShowSearchModal] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof MatchStatsFormData, string>>>({})
   const [formData, setFormData] = useState<MatchStatsFormData>({
     match_date: '',
@@ -55,6 +58,10 @@ export default function SchedulePage() {
     profile?.id || null,
     profile?.role === 'coach'
   )
+
+  useEffect(() => {
+    setFilteredMatchStats(matchStats)
+  }, [matchStats])
 
   useEffect(() => {
     const fetchMatchStats = async () => {
@@ -284,6 +291,21 @@ export default function SchedulePage() {
     }
   }
 
+  const handleSearch = (query: string) => {
+    if (!query.trim()) {
+      setFilteredMatchStats(matchStats)
+      return
+    }
+    const lowerQuery = query.toLowerCase()
+    const filtered = matchStats.filter(stat =>
+      stat.opponent.toLowerCase().includes(lowerQuery) ||
+      stat.venue.toLowerCase().includes(lowerQuery) ||
+      stat.match_date.includes(lowerQuery) ||
+      stat.match_result.toLowerCase().includes(lowerQuery)
+    )
+    setFilteredMatchStats(filtered)
+  }
+
   const menuItems = [
     { name: 'Dashboard', icon: 'Dashboard', path: '/dashboard' },
     { name: 'Profile', icon: 'Profile', path: '/profile/view' },
@@ -371,7 +393,7 @@ export default function SchedulePage() {
             </button>
             
             {/* Search */}
-            <button className="p-1.5 rounded-full bg-slate-800 bg-opacity-50 backdrop-blur-lg border border-slate-600 hover:bg-slate-700 transition-all" title="Search">
+            <button onClick={() => setShowSearchModal(true)} className="p-1.5 rounded-full bg-slate-800 bg-opacity-50 backdrop-blur-lg border border-slate-600 hover:bg-slate-700 transition-all" title="Search">
               <svg className="w-3.5 h-3.5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
@@ -404,6 +426,13 @@ export default function SchedulePage() {
               <span className="text-white text-xs font-bold">{profile?.full_name ? profile.full_name.charAt(0).toUpperCase() : 'U'}</span>
             </button>
           </div>
+
+          <SearchModal
+            isOpen={showSearchModal}
+            onClose={() => setShowSearchModal(false)}
+            onSearch={handleSearch}
+            placeholder="Search matches by opponent, venue, date, or result..."
+          />
 
           <div className="p-8">
             <div className={`max-w-6xl mx-auto ${isLoaded ? 'animate-fade-in-up' : 'opacity-0'}`}>
@@ -683,7 +712,7 @@ export default function SchedulePage() {
             <div className="bg-slate-800 bg-opacity-50 backdrop-blur-lg rounded-2xl shadow-2xl border border-slate-700 p-8">
               <h2 className="text-2xl font-bold text-white mb-6">Match History</h2>
               
-              {matchStats.length === 0 ? (
+              {filteredMatchStats.length === 0 ? (
                 <div className="text-center py-12">
                   <p className="text-gray-300 text-lg">No match statistics recorded yet.</p>
                   <button
@@ -708,7 +737,7 @@ export default function SchedulePage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {matchStats.map((stats) => (
+                      {filteredMatchStats.map((stats) => (
                         <tr key={stats.id} className="border-b border-slate-700 hover:bg-slate-700">
                           <td className="px-4 py-3 text-gray-300">{stats.match_date}</td>
                           <td className="px-4 py-3 text-gray-300">{stats.opponent}</td>

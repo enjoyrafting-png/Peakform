@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import CricketLogo from '@/components/CricketLogo'
+import SearchModal from '@/components/SearchModal'
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts'
 import { useCoachAthletes } from '@/hooks/useCoachAthletes'
 import { handleError, getErrorMessage } from '@/lib/errorHandler'
@@ -40,13 +41,19 @@ export default function MatchSummaryPage() {
   }
   const [loading, setLoading] = useState(false)
   const [matchStats, setMatchStats] = useState<MatchStats[]>([])
+  const [filteredMatchStats, setFilteredMatchStats] = useState<MatchStats[]>([])
   const [isLoaded, setIsLoaded] = useState(true)
   const [profile, setProfile] = useState<Profile | null>(null)
+  const [showSearchModal, setShowSearchModal] = useState(false)
 
   const { athletes, selectedAthlete, setSelectedAthlete } = useCoachAthletes(
     profile?.id || null,
     profile?.role === 'coach'
   )
+
+  useEffect(() => {
+    setFilteredMatchStats(matchStats)
+  }, [matchStats])
 
   useEffect(() => {
     const fetchMatchStats = async () => {
@@ -205,7 +212,7 @@ export default function MatchSummaryPage() {
   }
 
   const getRecentMatches = () => {
-    return matchStats.slice(0, 10).map(match => ({
+    return filteredMatchStats.slice(0, 10).map(match => ({
       ...match,
       battingAverage: match.overs_bowled > 0 ? (match.runs_scored / match.overs_bowled * 6).toFixed(2) : '0.00'
     }))
@@ -215,9 +222,23 @@ export default function MatchSummaryPage() {
     return matchStats.slice(0, 10).reverse().map(match => ({
       opponent: match.opponent,
       runs: match.runs_scored,
-      wickets: match.wickets_taken,
-      battingAvg: match.overs_bowled > 0 ? (match.runs_scored / match.overs_bowled * 6).toFixed(2) : 0
+      wickets: match.wickets_taken
     }))
+  }
+
+  const handleSearch = (query: string) => {
+    if (!query.trim()) {
+      setFilteredMatchStats(matchStats)
+      return
+    }
+    const lowerQuery = query.toLowerCase()
+    const filtered = matchStats.filter(stat =>
+      stat.opponent.toLowerCase().includes(lowerQuery) ||
+      stat.venue.toLowerCase().includes(lowerQuery) ||
+      stat.match_date.includes(lowerQuery) ||
+      stat.match_result.toLowerCase().includes(lowerQuery)
+    )
+    setFilteredMatchStats(filtered)
   }
 
   const getMatchResultDistribution = () => {
@@ -299,7 +320,7 @@ export default function MatchSummaryPage() {
             </button>
             
             {/* Search */}
-            <button className="p-1.5 rounded-full bg-slate-800 bg-opacity-50 backdrop-blur-lg border border-slate-600 hover:bg-slate-700 transition-all" title="Search">
+            <button onClick={() => setShowSearchModal(true)} className="p-1.5 rounded-full bg-slate-800 bg-opacity-50 backdrop-blur-lg border border-slate-600 hover:bg-slate-700 transition-all" title="Search">
               <svg className="w-3.5 h-3.5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
@@ -332,6 +353,13 @@ export default function MatchSummaryPage() {
               <span className="text-white text-xs font-bold">{profile?.full_name ? profile.full_name.charAt(0).toUpperCase() : 'U'}</span>
             </button>
           </div>
+
+          <SearchModal
+            isOpen={showSearchModal}
+            onClose={() => setShowSearchModal(false)}
+            onSearch={handleSearch}
+            placeholder="Search matches by opponent, venue, date, or result..."
+          />
 
           <div className="p-8">
             <div className={`max-w-7xl mx-auto ${isLoaded ? 'animate-fade-in-up' : 'opacity-0'}`}>

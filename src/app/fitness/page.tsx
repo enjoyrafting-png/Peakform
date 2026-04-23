@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import CricketLogo from '@/components/CricketLogo'
+import SearchModal from '@/components/SearchModal'
 import { fitnessDataSchema, type FitnessDataFormData } from '@/lib/validation'
 import { useCoachAthletes } from '@/hooks/useCoachAthletes'
 import { handleError, getErrorMessage } from '@/lib/errorHandler'
@@ -43,9 +44,11 @@ export default function FitnessPage() {
   }
   const [loading, setLoading] = useState(false)
   const [fitnessData, setFitnessData] = useState<FitnessData[]>([])
+  const [filteredFitnessData, setFilteredFitnessData] = useState<FitnessData[]>([])
   const [isLoaded, setIsLoaded] = useState(true)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [showForm, setShowForm] = useState(false)
+  const [showSearchModal, setShowSearchModal] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof FitnessDataFormData, string>>>({})
   const [formData, setFormData] = useState<FitnessDataFormData>({
     date: '',
@@ -70,6 +73,10 @@ export default function FitnessPage() {
     profile?.id || null,
     profile?.role === 'coach'
   )
+
+  useEffect(() => {
+    setFilteredFitnessData(fitnessData)
+  }, [fitnessData])
 
   useEffect(() => {
     const fetchFitnessData = async () => {
@@ -269,7 +276,7 @@ export default function FitnessPage() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this fitness data entry?')) {
+    if (!confirm('Are you sure you want to delete this fitness entry?')) {
       return
     }
 
@@ -287,6 +294,21 @@ export default function FitnessPage() {
     } catch (err) {
       // Error handling without console logging
     }
+  }
+
+  const handleSearch = (query: string) => {
+    if (!query.trim()) {
+      setFilteredFitnessData(fitnessData)
+      return
+    }
+    const lowerQuery = query.toLowerCase()
+    const filtered = fitnessData.filter(data =>
+      data.date.includes(lowerQuery) ||
+      data.body_type.toLowerCase().includes(lowerQuery) ||
+      String(data.weight).includes(lowerQuery) ||
+      String(data.bmi).includes(lowerQuery)
+    )
+    setFilteredFitnessData(filtered)
   }
 
   const menuItems = [
@@ -376,7 +398,7 @@ export default function FitnessPage() {
             </button>
             
             {/* Search */}
-            <button className="p-1.5 rounded-full bg-slate-800 bg-opacity-50 backdrop-blur-lg border border-slate-600 hover:bg-slate-700 transition-all" title="Search">
+            <button onClick={() => setShowSearchModal(true)} className="p-1.5 rounded-full bg-slate-800 bg-opacity-50 backdrop-blur-lg border border-slate-600 hover:bg-slate-700 transition-all" title="Search">
               <svg className="w-3.5 h-3.5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
@@ -409,6 +431,13 @@ export default function FitnessPage() {
               <span className="text-white text-xs font-bold">{profile?.full_name ? profile.full_name.charAt(0).toUpperCase() : 'U'}</span>
             </button>
           </div>
+
+          <SearchModal
+            isOpen={showSearchModal}
+            onClose={() => setShowSearchModal(false)}
+            onSearch={handleSearch}
+            placeholder="Search fitness data by date, body type, weight, or BMI..."
+          />
 
           <div className="p-8">
             <div className={`max-w-6xl mx-auto ${isLoaded ? 'animate-fade-in-up' : 'opacity-0'}`}>
@@ -740,7 +769,7 @@ export default function FitnessPage() {
             <div className="bg-slate-800 bg-opacity-50 backdrop-blur-lg rounded-2xl shadow-2xl border border-slate-700 p-8">
               <h2 className="text-2xl font-bold text-white mb-6">Fitness History</h2>
               
-              {fitnessData.length === 0 ? (
+              {filteredFitnessData.length === 0 ? (
                 <div className="text-center py-12">
                   <p className="text-gray-300 text-lg">No fitness data recorded yet.</p>
                   <button
@@ -765,7 +794,7 @@ export default function FitnessPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {fitnessData.map((data) => (
+                      {filteredFitnessData.map((data) => (
                         <tr key={data.id} className="border-b border-slate-700 hover:bg-slate-700">
                           <td className="px-4 py-3 text-gray-300">{data.date}</td>
                           <td className="px-4 py-3 text-gray-300">{data.weight}</td>

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import CricketLogo from '@/components/CricketLogo'
+import SearchModal from '@/components/SearchModal'
 import { trainingLogSchema, type TrainingLogFormData } from '@/lib/validation'
 import { useCoachAthletes } from '@/hooks/useCoachAthletes'
 import { handleError, getErrorMessage } from '@/lib/errorHandler'
@@ -33,9 +34,11 @@ export default function TrainingLogPage() {
     }
   }
   const [logs, setLogs] = useState<TrainingLog[]>([])
+  const [filteredLogs, setFilteredLogs] = useState<TrainingLog[]>([])
   const [isLoaded, setIsLoaded] = useState(true)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [showForm, setShowForm] = useState(false)
+  const [showSearchModal, setShowSearchModal] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof TrainingLogFormData, string>>>({})
   const [formData, setFormData] = useState({
     date: '',
@@ -50,6 +53,10 @@ export default function TrainingLogPage() {
     profile?.id || null,
     profile?.role === 'coach'
   )
+
+  useEffect(() => {
+    setFilteredLogs(logs)
+  }, [logs])
 
   useEffect(() => {
     const fetchLogs = async () => {
@@ -238,6 +245,22 @@ export default function TrainingLogPage() {
     }
   }
 
+  const handleSearch = (query: string) => {
+    if (!query.trim()) {
+      setFilteredLogs(logs)
+      return
+    }
+    const lowerQuery = query.toLowerCase()
+    const filtered = logs.filter(log =>
+      log.session_type.toLowerCase().includes(lowerQuery) ||
+      log.date.includes(lowerQuery) ||
+      log.intensity.toLowerCase().includes(lowerQuery) ||
+      (log.performance_notes && log.performance_notes.toLowerCase().includes(lowerQuery)) ||
+      (log.coach_notes && log.coach_notes.toLowerCase().includes(lowerQuery))
+    )
+    setFilteredLogs(filtered)
+  }
+
   const menuItems = [
     { name: 'Dashboard', icon: 'Dashboard', path: '/dashboard' },
     { name: 'Profile', icon: 'Profile', path: '/profile/view' },
@@ -325,7 +348,7 @@ export default function TrainingLogPage() {
             </button>
             
             {/* Search */}
-            <button className="p-1.5 rounded-full bg-slate-800 bg-opacity-50 backdrop-blur-lg border border-slate-600 hover:bg-slate-700 transition-all" title="Search">
+            <button onClick={() => setShowSearchModal(true)} className="p-1.5 rounded-full bg-slate-800 bg-opacity-50 backdrop-blur-lg border border-slate-600 hover:bg-slate-700 transition-all" title="Search">
               <svg className="w-3.5 h-3.5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
@@ -358,6 +381,13 @@ export default function TrainingLogPage() {
               <span className="text-white text-xs font-bold">{profile?.full_name ? profile.full_name.charAt(0).toUpperCase() : 'U'}</span>
             </button>
           </div>
+
+          <SearchModal
+            isOpen={showSearchModal}
+            onClose={() => setShowSearchModal(false)}
+            onSearch={handleSearch}
+            placeholder="Search training logs by session type, date, intensity, or notes..."
+          />
 
           <div className="p-8">
             <div className={`max-w-6xl mx-auto ${isLoaded ? 'animate-fade-in-up' : 'opacity-0'}`}>
@@ -535,7 +565,7 @@ export default function TrainingLogPage() {
             <div className="bg-slate-800 bg-opacity-50 backdrop-blur-lg rounded-2xl shadow-2xl border border-slate-700 p-8">
               <h2 className="text-2xl font-bold text-white mb-6">Training History</h2>
               
-              {logs.length === 0 ? (
+              {filteredLogs.length === 0 ? (
                 <div className="text-center py-12">
                   <div className="inline-flex items-center justify-center w-16 h-16 bg-slate-700 rounded-full mb-4">
                     <svg className="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
@@ -559,7 +589,7 @@ export default function TrainingLogPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {logs.map((log) => (
+                      {filteredLogs.map((log) => (
                         <tr key={log.id} className="border-b border-slate-700 hover:bg-slate-700 hover:bg-opacity-30">
                           <td className="py-3 px-4 text-gray-300">{log.date}</td>
                           <td className="py-3 px-4 text-gray-300">{log.session_type}</td>
