@@ -42,6 +42,7 @@ export default function MatchSummaryPage() {
   const [loading, setLoading] = useState(false)
   const [matchStats, setMatchStats] = useState<MatchStats[]>([])
   const [filteredMatchStats, setFilteredMatchStats] = useState<MatchStats[]>([])
+  const [searchQuery, setSearchQuery] = useState('')
   const [isLoaded, setIsLoaded] = useState(true)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [showSearchModal, setShowSearchModal] = useState(false)
@@ -227,11 +228,12 @@ export default function MatchSummaryPage() {
   }
 
   const handleSearch = (query: string) => {
+    setSearchQuery(query)
     if (!query.trim()) {
       setFilteredMatchStats(matchStats)
       return
     }
-    const lowerQuery = query.toLowerCase()
+    const lowerQuery = query.toLowerCase().trim()
     const filtered = matchStats.filter(stat =>
       stat.opponent.toLowerCase().includes(lowerQuery) ||
       stat.venue.toLowerCase().includes(lowerQuery) ||
@@ -566,17 +568,34 @@ export default function MatchSummaryPage() {
 
             {/* Recent Matches Table */}
             <div className="bg-slate-800 bg-opacity-50 backdrop-blur-lg rounded-2xl shadow-2xl border border-slate-700 p-8">
-              <h2 className="text-2xl font-bold text-white mb-6">Recent Matches</h2>
-              
-              {matchStats.length === 0 ? (
+              <h2 className="text-2xl font-bold text-white mb-6">
+                Recent Matches
+                {searchQuery && <span className="text-gray-400 text-lg ml-4">Search: "{searchQuery}"</span>}
+              </h2>
+
+              {filteredMatchStats.length === 0 ? (
                 <div className="text-center py-12">
-                  <p className="text-gray-300 text-lg">No match statistics recorded yet.</p>
-                  <button
-                    onClick={() => router.push('/schedule')}
-                    className="mt-4 bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-gray-900 font-bold py-3 px-6 rounded-lg transition-all transform hover:scale-105 shadow-xl"
-                  >
-                    Add Match Entry
-                  </button>
+                  <p className="text-gray-300 text-lg">
+                    {searchQuery ? 'No matches found for your search.' : 'No match statistics recorded yet.'}
+                  </p>
+                  {searchQuery ? (
+                    <button
+                      onClick={() => {
+                        setSearchQuery('')
+                        setFilteredMatchStats(matchStats)
+                      }}
+                      className="mt-4 bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-500 hover:to-slate-600 text-white font-bold py-3 px-6 rounded-lg transition-all"
+                    >
+                      Clear Search
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => router.push('/schedule')}
+                      className="mt-4 bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-gray-900 font-bold py-3 px-6 rounded-lg transition-all transform hover:scale-105 shadow-xl"
+                    >
+                      Add Match Entry
+                    </button>
+                  )}
                 </div>
               ) : (
                 <div className="overflow-x-auto">

@@ -45,6 +45,7 @@ export default function FitnessPage() {
   const [loading, setLoading] = useState(false)
   const [fitnessData, setFitnessData] = useState<FitnessData[]>([])
   const [filteredFitnessData, setFilteredFitnessData] = useState<FitnessData[]>([])
+  const [searchQuery, setSearchQuery] = useState('')
   const [isLoaded, setIsLoaded] = useState(true)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [showForm, setShowForm] = useState(false)
@@ -297,11 +298,12 @@ export default function FitnessPage() {
   }
 
   const handleSearch = (query: string) => {
+    setSearchQuery(query)
     if (!query.trim()) {
       setFilteredFitnessData(fitnessData)
       return
     }
-    const lowerQuery = query.toLowerCase()
+    const lowerQuery = query.toLowerCase().trim()
     const filtered = fitnessData.filter(data =>
       data.date.includes(lowerQuery) ||
       data.body_type.toLowerCase().includes(lowerQuery) ||
@@ -767,17 +769,34 @@ export default function FitnessPage() {
 
             {/* Fitness Data List */}
             <div className="bg-slate-800 bg-opacity-50 backdrop-blur-lg rounded-2xl shadow-2xl border border-slate-700 p-8">
-              <h2 className="text-2xl font-bold text-white mb-6">Fitness History</h2>
-              
+              <h2 className="text-2xl font-bold text-white mb-6">
+                Fitness History
+                {searchQuery && <span className="text-gray-400 text-lg ml-4">Search: "{searchQuery}"</span>}
+              </h2>
+
               {filteredFitnessData.length === 0 ? (
                 <div className="text-center py-12">
-                  <p className="text-gray-300 text-lg">No fitness data recorded yet.</p>
-                  <button
-                    onClick={() => setShowForm(true)}
-                    className="mt-4 bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-gray-900 font-bold py-3 px-6 rounded-lg transition-all transform hover:scale-105 shadow-xl"
-                  >
-                    Add Fitness Entry
-                  </button>
+                  <p className="text-gray-300 text-lg">
+                    {searchQuery ? 'No fitness data found for your search.' : 'No fitness data recorded yet.'}
+                  </p>
+                  {searchQuery ? (
+                    <button
+                      onClick={() => {
+                        setSearchQuery('')
+                        setFilteredFitnessData(fitnessData)
+                      }}
+                      className="mt-4 bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-500 hover:to-slate-600 text-white font-bold py-3 px-6 rounded-lg transition-all"
+                    >
+                      Clear Search
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setShowForm(true)}
+                      className="mt-4 bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-gray-900 font-bold py-3 px-6 rounded-lg transition-all transform hover:scale-105 shadow-xl"
+                    >
+                      Add Fitness Entry
+                    </button>
+                  )}
                 </div>
               ) : (
                 <div className="overflow-x-auto">

@@ -35,6 +35,7 @@ export default function TrainingLogPage() {
   }
   const [logs, setLogs] = useState<TrainingLog[]>([])
   const [filteredLogs, setFilteredLogs] = useState<TrainingLog[]>([])
+  const [searchQuery, setSearchQuery] = useState('')
   const [isLoaded, setIsLoaded] = useState(true)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [showForm, setShowForm] = useState(false)
@@ -246,11 +247,12 @@ export default function TrainingLogPage() {
   }
 
   const handleSearch = (query: string) => {
+    setSearchQuery(query)
     if (!query.trim()) {
       setFilteredLogs(logs)
       return
     }
-    const lowerQuery = query.toLowerCase()
+    const lowerQuery = query.toLowerCase().trim()
     const filtered = logs.filter(log =>
       log.session_type.toLowerCase().includes(lowerQuery) ||
       log.date.includes(lowerQuery) ||
@@ -563,8 +565,11 @@ export default function TrainingLogPage() {
             )}
             {/* Training Logs Table */}
             <div className="bg-slate-800 bg-opacity-50 backdrop-blur-lg rounded-2xl shadow-2xl border border-slate-700 p-8">
-              <h2 className="text-2xl font-bold text-white mb-6">Training History</h2>
-              
+              <h2 className="text-2xl font-bold text-white mb-6">
+                Training History
+                {searchQuery && <span className="text-gray-400 text-lg ml-4">Search: "{searchQuery}"</span>}
+              </h2>
+
               {filteredLogs.length === 0 ? (
                 <div className="text-center py-12">
                   <div className="inline-flex items-center justify-center w-16 h-16 bg-slate-700 rounded-full mb-4">
@@ -573,8 +578,23 @@ export default function TrainingLogPage() {
                       <path fillRule="evenodd" d="M4 5a2 2 0 012-2 1 1 0 000 2h6a1 1 0 100-2 2 2 0 00-2 2v11a2 2 0 002 2h6a2 2 0 002-2V5a2 2 0 00-2-2H6z" clipRule="evenodd"/>
                     </svg>
                   </div>
-                  <p className="text-gray-400 text-lg">No training logs yet</p>
-                  <p className="text-gray-500 mt-2">Start by adding your first training session above</p>
+                  <p className="text-gray-400 text-lg">
+                    {searchQuery ? 'No training logs found for your search.' : 'No training logs yet'}
+                  </p>
+                  <p className="text-gray-500 mt-2">
+                    {searchQuery ? 'Try a different search term.' : 'Start by adding your first training session above'}
+                  </p>
+                  {searchQuery && (
+                    <button
+                      onClick={() => {
+                        setSearchQuery('')
+                        setFilteredLogs(logs)
+                      }}
+                      className="mt-4 bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-500 hover:to-slate-600 text-white font-bold py-3 px-6 rounded-lg transition-all"
+                    >
+                      Clear Search
+                    </button>
+                  )}
                 </div>
               ) : (
                 <div className="overflow-x-auto">
