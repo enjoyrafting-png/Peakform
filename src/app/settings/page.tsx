@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import CricketLogo from '@/components/CricketLogo'
+import FeedbackModal from '@/components/FeedbackModal'
 import { profileUpdateSchema, passwordChangeSchema, type ProfileUpdateFormData, type PasswordChangeFormData } from '@/lib/validation'
 
 interface Profile {
@@ -28,9 +29,36 @@ export default function SettingsPage() {
     }
   }
 
+  const handleFeedbackSubmit = async (type: 'positive' | 'improvement', message: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        alert('You must be logged in to submit feedback.')
+        return
+      }
+
+      const { error } = await supabase
+        .from('feedback')
+        .insert({
+          user_id: user.id,
+          type,
+          message
+        })
+
+      if (error) {
+        alert('Failed to submit feedback. Please try again.')
+      } else {
+        alert('Thank you for your feedback!')
+      }
+    } catch (err) {
+      alert('An error occurred. Please try again.')
+    }
+  }
+
   const [loading, setLoading] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
   const [profile, setProfile] = useState<any>(null)
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false)
   const [profileForm, setProfileForm] = useState({
     username: '',
     full_name: '',
@@ -264,7 +292,7 @@ export default function SettingsPage() {
           {/* Top Right Icons Bar */}
           <div className="absolute top-4 right-4 z-20 flex items-center space-x-2">
             {/* Feedback */}
-            <button className="p-1.5 rounded-full bg-slate-800 bg-opacity-50 backdrop-blur-lg border border-slate-600 hover:bg-slate-700 transition-all" title="Feedback">
+            <button onClick={() => setShowFeedbackModal(true)} className="p-1.5 rounded-full bg-slate-800 bg-opacity-50 backdrop-blur-lg border border-slate-600 hover:bg-slate-700 transition-all" title="Feedback">
               <svg className="w-3.5 h-3.5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
               </svg>
@@ -304,6 +332,12 @@ export default function SettingsPage() {
               <span className="text-white text-xs font-bold">{profile?.full_name ? profile.full_name.charAt(0).toUpperCase() : 'U'}</span>
             </button>
           </div>
+
+          <FeedbackModal
+            isOpen={showFeedbackModal}
+            onClose={() => setShowFeedbackModal(false)}
+            onSubmit={handleFeedbackSubmit}
+          />
 
           <div className="p-8">
             <div className={`max-w-6xl mx-auto ${isLoaded ? 'animate-fade-in-up' : 'opacity-0'}`}>
