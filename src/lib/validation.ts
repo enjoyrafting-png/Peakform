@@ -61,7 +61,7 @@ export const fitnessDataSchema = z.object({
 export const matchStatsSchema = z.object({
   match_date: z.string().min(1, 'Match date is required'),
   opponent: z.string().min(1, 'Opponent is required'),
-  venue: z.string().optional(),
+  venue: z.string().min(1, 'Venue is required'),
   runs_scored: z.number().min(0, 'Runs scored must be a positive number'),
   wickets_taken: z.number().min(0, 'Wickets taken must be a positive number'),
   overs_bowled: z.number().min(0, 'Overs bowled must be a positive number'),
@@ -70,7 +70,7 @@ export const matchStatsSchema = z.object({
   man_of_match: z.boolean().optional(),
   bowling_figures: z.string().optional(),
   batting_figures: z.string().optional(),
-  match_result: z.enum(['won', 'lost', 'draw']),
+  match_result: z.enum(['won', 'lost', 'draw', 'tied']),
   notes: z.string().optional()
 })
 
