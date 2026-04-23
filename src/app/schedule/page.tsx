@@ -306,6 +306,13 @@ export default function SchedulePage() {
       stat.match_result.toLowerCase().includes(lowerQuery)
     )
     setFilteredMatchStats(filtered)
+    // Scroll to table after search
+    setTimeout(() => {
+      const tableElement = document.querySelector('.bg-slate-800.bg-opacity-50')
+      if (tableElement) {
+        tableElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }
+    }, 100)
   }
 
   const menuItems = [
@@ -714,7 +721,12 @@ export default function SchedulePage() {
             <div className="bg-slate-800 bg-opacity-50 backdrop-blur-lg rounded-2xl shadow-2xl border border-slate-700 p-8">
               <h2 className="text-2xl font-bold text-white mb-6">
                 Match History
-                {searchQuery && <span className="text-gray-400 text-lg ml-4">Search: &apos;{searchQuery}&apos;</span>}
+                {searchQuery && (
+                  <>
+                    <span className="text-gray-400 text-lg ml-4">Search: &apos;{searchQuery}&apos;</span>
+                    <span className="text-gray-400 text-lg ml-2">({filteredMatchStats.length} results)</span>
+                  </>
+                )}
               </h2>
 
               {filteredMatchStats.length === 0 ? (
