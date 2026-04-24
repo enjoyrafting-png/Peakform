@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import CricketLogo from '@/components/CricketLogo'
+import Image from 'next/image'
+import { useError } from '@/contexts/ErrorContext'
 import FeedbackModal from '@/components/FeedbackModal'
 import { profileUpdateSchema, passwordChangeSchema, type ProfileUpdateFormData, type PasswordChangeFormData } from '@/lib/validation'
 
@@ -19,6 +21,7 @@ interface Profile {
 
 export default function SettingsPage() {
   const router = useRouter()
+  const { showError } = useError()
 
   const handleSignOut = async () => {
     try {
@@ -33,7 +36,7 @@ export default function SettingsPage() {
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
-        alert('You must be logged in to submit feedback.')
+        showError('You must be logged in to submit feedback.')
         return
       }
 
@@ -46,12 +49,12 @@ export default function SettingsPage() {
         })
 
       if (error) {
-        alert('Failed to submit feedback. Please try again.')
+        showError('Failed to submit feedback. Please try again.')
       } else {
         alert('Thank you for your feedback!')
       }
     } catch (err) {
-      alert('An error occurred. Please try again.')
+      showError('An error occurred. Please try again.')
     }
   }
 
@@ -173,7 +176,7 @@ export default function SettingsPage() {
       if (!validationResult.success) {
         const errors = validationResult.error.flatten().fieldErrors
         setProfileFieldErrors(errors as Partial<Record<keyof ProfileUpdateFormData, string>>)
-        alert('Please fix the validation errors')
+        showError('Please fix the validation errors')
         setLoading(false)
         return
       }
@@ -181,7 +184,7 @@ export default function SettingsPage() {
       const { data: { user } } = await supabase.auth.getUser()
       
       if (!user) {
-        alert('User not authenticated. Please log in again.')
+        showError('User not authenticated. Please log in again.')
         setLoading(false)
         return
       }
@@ -197,13 +200,13 @@ export default function SettingsPage() {
         .eq('id', user.id)
 
       if (error) {
-        alert('Error updating profile. Please try again.')
+        showError('Error updating profile. Please try again.')
       } else {
         alert('Profile updated successfully!')
         setProfile((prev: any) => prev ? { ...prev, ...profileForm } : null)
       }
     } catch (err) {
-      alert('An unexpected error occurred. Please try again.')
+      showError('An unexpected error occurred. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -221,7 +224,7 @@ export default function SettingsPage() {
       if (!validationResult.success) {
         const errors = validationResult.error.flatten().fieldErrors
         setPasswordFieldErrors(errors as Partial<Record<keyof PasswordChangeFormData, string>>)
-        alert('Please fix the validation errors')
+        showError('Please fix the validation errors')
         setLoading(false)
         return
       }
@@ -229,7 +232,7 @@ export default function SettingsPage() {
       const { data: { user } } = await supabase.auth.getUser()
       
       if (!user) {
-        alert('User not authenticated. Please log in again.')
+        showError('User not authenticated. Please log in again.')
         setLoading(false)
         return
       }
@@ -239,7 +242,7 @@ export default function SettingsPage() {
       })
 
       if (error) {
-        alert('Error updating password. Please try again.')
+        showError('Error updating password. Please try again.')
       } else {
         alert('Password updated successfully!')
         setPasswordForm({
@@ -249,7 +252,7 @@ export default function SettingsPage() {
         })
       }
     } catch (err) {
-      alert('An unexpected error occurred. Please try again.')
+      showError('An unexpected error occurred. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -257,7 +260,7 @@ export default function SettingsPage() {
 
   const handleAssignCoach = async () => {
     if (!selectedAthlete || !selectedCoach) {
-      alert('Please select both an athlete and a coach')
+      showError('Please select both an athlete and a coach')
       return
     }
 
@@ -278,7 +281,7 @@ export default function SettingsPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        alert('Error assigning coach: ' + (data.error || 'Unknown error'))
+        showError('Error assigning coach: ' + (data.error || 'Unknown error'))
       } else {
         alert('Coach assigned successfully!')
         // Refresh assignments using API route
@@ -291,7 +294,7 @@ export default function SettingsPage() {
         setSelectedCoach('')
       }
     } catch (err) {
-      alert('An unexpected error occurred. Please try again.')
+      showError('An unexpected error occurred. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -319,7 +322,7 @@ export default function SettingsPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        alert('Error unassigning coach: ' + (data.error || 'Unknown error'))
+        showError('Error unassigning coach: ' + (data.error || 'Unknown error'))
       } else {
         alert('Coach unassigned successfully!')
         // Refresh assignments using API route
@@ -330,7 +333,7 @@ export default function SettingsPage() {
         setAssignments(athletes)
       }
     } catch (err) {
-      alert('An unexpected error occurred. Please try again.')
+      showError('An unexpected error occurred. Please try again.')
     } finally {
       setLoading(false)
     }

@@ -7,6 +7,7 @@ import CricketLogo from '@/components/CricketLogo'
 import Image from 'next/image'
 import ProfileVerification from '@/components/ProfileVerification'
 import { profileSchema, type ProfileFormData } from '@/lib/validation'
+import { useError } from '@/contexts/ErrorContext'
 
 interface ProfileData {
   fullName: string
@@ -22,6 +23,7 @@ interface ProfileData {
 
 export default function CreateProfilePage() {
   const router = useRouter()
+  const { showError } = useError()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
@@ -108,7 +110,7 @@ export default function CreateProfilePage() {
         photo: data.url
       }))
     } catch (error: any) {
-      alert('Error uploading photo: ' + error.message)
+      showError('Error uploading photo: ' + error.message)
     } finally {
       setUploadingPhoto(false)
     }
@@ -163,7 +165,6 @@ export default function CreateProfilePage() {
       if (!validationResult.success) {
         const errors = validationResult.error.flatten().fieldErrors
         setFieldErrors(errors as Partial<Record<keyof ProfileFormData, string>>)
-        setError('Please fix the validation errors')
         setLoading(false)
         return
       }
@@ -171,7 +172,7 @@ export default function CreateProfilePage() {
       const { data: { user } } = await supabase.auth.getUser()
       
       if (!user) {
-        setError('You must be logged in to create a profile')
+        showError('You must be logged in to create a profile')
         return
       }
 
@@ -191,7 +192,7 @@ export default function CreateProfilePage() {
         .eq('id', user.id)
 
       if (updateError) {
-        setError(updateError.message)
+        showError(updateError.message)
       } else {
         setSuccess('Profile created successfully!')
         setTimeout(() => {
@@ -199,7 +200,7 @@ export default function CreateProfilePage() {
         }, 2000)
       }
     } catch (err: any) {
-      setError('An unexpected error occurred. Please try again.')
+      showError('An unexpected error occurred. Please try again.')
     } finally {
       setLoading(false)
     }
