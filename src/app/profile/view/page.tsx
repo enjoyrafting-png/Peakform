@@ -5,7 +5,6 @@ import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import CricketLogo from '@/components/CricketLogo'
 import FeedbackModal from '@/components/FeedbackModal'
-import Image from 'next/image'
 
 interface Profile {
   id: string
@@ -308,11 +307,9 @@ export default function ProfileViewPage() {
                     <div className="relative inline-block">
                       <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-blue-600 rounded-full blur-xl opacity-30"></div>
                       {profile.photo ? (
-                        <Image
+                        <img
                           src={profile.photo}
                           alt={profile.full_name || 'Profile'}
-                          width={128}
-                          height={128}
                           className="relative w-32 h-32 rounded-full object-cover border-4 border-white shadow-xl"
                         />
                       ) : (

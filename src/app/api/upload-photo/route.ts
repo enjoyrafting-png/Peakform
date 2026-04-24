@@ -63,7 +63,7 @@ export async function POST(request: Request) {
 
     const fileExt = file.name.split('.').pop()
     const fileName = `${user.id}-${Date.now()}.${fileExt}`
-    const filePath = `profile-photos/${fileName}`
+    const filePath = `${user.id}-${Date.now()}.${fileExt}`
 
     const { error: uploadError } = await supabaseAdmin.storage
       .from('profile-photos')
