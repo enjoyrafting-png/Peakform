@@ -114,8 +114,12 @@ export default function SettingsPage() {
             website: profileData.website || ''
           })
 
+          console.log('User profile role:', profileData.role)
+          console.log('User profile role_text:', (profileData as any).role_text)
+
           // Fetch coaches and athletes if admin
           if (profileData.role === 'admin') {
+            console.log('User is admin, fetching coaches and athletes...')
             const { data: allProfiles } = await supabase
               .from('profiles')
               .select('*')
@@ -139,6 +143,8 @@ export default function SettingsPage() {
             setCoaches(coaches)
             setAthletes(athletes)
             setAssignments(athletes)
+          } else {
+            console.log('User is not admin, skipping coach/athlete fetch')
           }
         }
       } catch (err) {
