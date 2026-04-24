@@ -60,15 +60,15 @@ export default function SignUpPage() {
           })
         
         if (profileError) {
-          setMessage('Account created! Profile setup will be completed automatically.')
+          setMessage('Account created! Profile setup will be completed automatically. Please check and confirm your email.')
         } else {
-          setMessage('Account created! Redirecting to profile creation...')
+          setMessage('Account created! Redirecting to profile creation... Please check and confirm your email.')
           setTimeout(() => {
             router.push('/profile/create')
           }, 2000)
         }
       } else {
-        setMessage('Account created! Please check your email to confirm your account before signing in.')
+        setMessage('Account created! Please check and confirm your email before signing in.')
       }
     } catch (error: any) {
       setError(error.message)
@@ -97,13 +97,13 @@ export default function SignUpPage() {
         <div className="bg-slate-800 bg-opacity-50 backdrop-blur-lg rounded-2xl p-8 border border-slate-700 shadow-2xl">
           <form className="space-y-6" onSubmit={handleSignUp}>
             {error && (
-              <div className="bg-red-900 bg-opacity-50 border border-red-600 text-red-300 rounded-lg p-4">
+              <div className="bg-red-900 bg-opacity-50 border border-red-600 text-red-300 rounded-lg p-4 text-center">
                 {error}
               </div>
             )}
 
             {message && (
-              <div className="bg-green-900 bg-opacity-50 border border-green-600 text-green-300 rounded-lg p-4">
+              <div className="bg-green-900 bg-opacity-50 border border-green-600 text-green-300 rounded-lg p-4 text-center">
                 {message}
               </div>
             )}
