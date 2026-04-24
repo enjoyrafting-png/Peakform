@@ -118,10 +118,15 @@ export default function SettingsPage() {
           if (profileData.role === 'admin') {
             const { data: allProfiles } = await supabase
               .from('profiles')
-              .select('id, full_name, role, role_text, coach_id')
+              .select('*')
+            
+            console.log('All profiles data:', allProfiles)
             
             const coaches = allProfiles?.filter(p => p.role === 'coach' || p.role_text === 'coach') || []
             const athletes = allProfiles?.filter(p => p.role === 'athlete' || p.role_text === 'athlete') || []
+            
+            console.log('Filtered coaches:', coaches)
+            console.log('Filtered athletes:', athletes)
             
             setCoaches(coaches)
             setAthletes(athletes)
@@ -252,7 +257,7 @@ export default function SettingsPage() {
         // Refresh assignments
         const { data: allProfiles } = await supabase
           .from('profiles')
-          .select('id, full_name, role, role_text, coach_id')
+          .select('*')
         const athletes = allProfiles?.filter(p => p.role === 'athlete' || p.role_text === 'athlete') || []
         setAthletes(athletes)
         setAssignments(athletes)
@@ -285,7 +290,7 @@ export default function SettingsPage() {
         // Refresh assignments
         const { data: allProfiles } = await supabase
           .from('profiles')
-          .select('id, full_name, role, role_text, coach_id')
+          .select('*')
         const athletes = allProfiles?.filter(p => p.role === 'athlete' || p.role_text === 'athlete') || []
         setAthletes(athletes)
         setAssignments(athletes)
