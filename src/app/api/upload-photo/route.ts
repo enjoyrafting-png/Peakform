@@ -13,7 +13,16 @@ const supabaseAdmin = supabaseServiceKey ? createClient(supabaseUrl, supabaseSer
 async function getCurrentUser() {
   try {
     const cookieStore = await cookies()
-    const token = cookieStore.get('sb-access-token')?.value
+    
+    // Try multiple possible cookie names for Supabase auth
+    const token = cookieStore.get('sb-access-token')?.value ||
+                  cookieStore.get('sb:token')?.value ||
+                  cookieStore.get('supabase-auth-token')?.value
+    
+    console.log('Cookie check - sb-access-token:', !!cookieStore.get('sb-access-token')?.value)
+    console.log('Cookie check - sb:token:', !!cookieStore.get('sb:token')?.value)
+    console.log('Cookie check - supabase-auth-token:', !!cookieStore.get('supabase-auth-token')?.value)
+    console.log('Token found:', !!token)
     
     if (!token) {
       return null
@@ -21,12 +30,16 @@ async function getCurrentUser() {
 
     const { data: { user }, error } = await supabase.auth.getUser(token)
     
+    console.log('Auth getUser error:', error)
+    console.log('Auth getUser user:', !!user)
+    
     if (error || !user) {
       return null
     }
 
     return user
-  } catch {
+  } catch (err) {
+    console.error('getCurrentUser error:', err)
     return null
   }
 }
