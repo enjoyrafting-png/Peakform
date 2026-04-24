@@ -81,11 +81,17 @@ export default function SettingsPage() {
     weeklySummary: false
   })
 
+  const [coaches, setCoaches] = useState<any[]>([])
+  const [athletes, setAthletes] = useState<any[]>([])
+  const [assignments, setAssignments] = useState<any[]>([])
+  const [selectedAthlete, setSelectedAthlete] = useState('')
+  const [selectedCoach, setSelectedCoach] = useState('')
+
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser()
-        
+
         if (!user) {
           router.push('/auth/login')
           return
@@ -107,6 +113,17 @@ export default function SettingsPage() {
             avatar_url: profileData.avatar_url || '',
             website: profileData.website || ''
           })
+
+          // Fetch coaches and athletes if admin
+          if (profileData.role === 'admin') {
+            const [coachesData, athletesData] = await Promise.all([
+              supabase.from('profiles').select('id, full_name').eq('role', 'coach'),
+              supabase.from('profiles').select('id, full_name, coach_id').eq('role', 'athlete')
+            ])
+            setCoaches(coachesData.data || [])
+            setAthletes(athletesData.data || [])
+            setAssignments(athletesData.data || [])
+          }
         }
       } catch (err) {
         // Error handling without console logging
@@ -204,6 +221,71 @@ export default function SettingsPage() {
           newPassword: '',
           confirmPassword: ''
         })
+      }
+    } catch (err) {
+      alert('An unexpected error occurred. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleAssignCoach = async () => {
+    if (!selectedAthlete || !selectedCoach) {
+      alert('Please select both an athlete and a coach')
+      return
+    }
+
+    setLoading(true)
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ coach_id: selectedCoach })
+        .eq('id', selectedAthlete)
+
+      if (error) {
+        alert('Error assigning coach. Please try again.')
+      } else {
+        alert('Coach assigned successfully!')
+        // Refresh assignments
+        const { data: updatedAthletes } = await supabase
+          .from('profiles')
+          .select('id, full_name, coach_id')
+          .eq('role', 'athlete')
+        setAthletes(updatedAthletes || [])
+        setAssignments(updatedAthletes || [])
+        setSelectedAthlete('')
+        setSelectedCoach('')
+      }
+    } catch (err) {
+      alert('An unexpected error occurred. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleUnassignCoach = async (athleteId: string) => {
+    if (!confirm('Are you sure you want to unassign this coach from the athlete?')) {
+      return
+    }
+
+    setLoading(true)
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ coach_id: null })
+        .eq('id', athleteId)
+
+      if (error) {
+        alert('Error unassigning coach. Please try again.')
+      } else {
+        alert('Coach unassigned successfully!')
+        // Refresh assignments
+        const { data: updatedAthletes } = await supabase
+          .from('profiles')
+          .select('id, full_name, coach_id')
+          .eq('role', 'athlete')
+        setAthletes(updatedAthletes || [])
+        setAssignments(updatedAthletes || [])
       }
     } catch (err) {
       alert('An unexpected error occurred. Please try again.')
@@ -358,8 +440,8 @@ export default function SettingsPage() {
                 <button
                   onClick={() => setActiveTab('profile')}
                   className={`px-6 py-2 rounded-lg font-semibold transition-all ${
-                    activeTab === 'profile' 
-                      ? 'bg-yellow-400 text-gray-900' 
+                    activeTab === 'profile'
+                      ? 'bg-yellow-400 text-gray-900'
                       : 'bg-slate-700 text-gray-300 hover:bg-slate-600'
                   }`}
                 >
@@ -368,8 +450,8 @@ export default function SettingsPage() {
                 <button
                   onClick={() => setActiveTab('security')}
                   className={`px-6 py-2 rounded-lg font-semibold transition-all ${
-                    activeTab === 'security' 
-                      ? 'bg-yellow-400 text-gray-900' 
+                    activeTab === 'security'
+                      ? 'bg-yellow-400 text-gray-900'
                       : 'bg-slate-700 text-gray-300 hover:bg-slate-600'
                   }`}
                 >
@@ -378,13 +460,25 @@ export default function SettingsPage() {
                 <button
                   onClick={() => setActiveTab('notifications')}
                   className={`px-6 py-2 rounded-lg font-semibold transition-all ${
-                    activeTab === 'notifications' 
-                      ? 'bg-yellow-400 text-gray-900' 
+                    activeTab === 'notifications'
+                      ? 'bg-yellow-400 text-gray-900'
                       : 'bg-slate-700 text-gray-300 hover:bg-slate-600'
                   }`}
                 >
                   Notifications
                 </button>
+                {profile?.role === 'admin' && (
+                  <button
+                    onClick={() => setActiveTab('admin')}
+                    className={`px-6 py-2 rounded-lg font-semibold transition-all ${
+                      activeTab === 'admin'
+                        ? 'bg-yellow-400 text-gray-900'
+                        : 'bg-slate-700 text-gray-300 hover:bg-slate-600'
+                    }`}
+                  >
+                    Admin
+                  </button>
+                )}
               </div>
 
               {/* Profile Tab */}
@@ -652,6 +746,95 @@ export default function SettingsPage() {
                         Save Preferences
                       </button>
                     </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Admin Tab */}
+              {activeTab === 'admin' && profile?.role === 'admin' && (
+                <div>
+                  <h2 className="text-2xl font-bold text-white mb-6">Coach Assignments</h2>
+                  
+                  {/* Assign Coach Form */}
+                  <div className="bg-slate-700 bg-opacity-30 rounded-lg p-6 mb-8">
+                    <h3 className="text-lg font-semibold text-white mb-4">Assign Coach to Athlete</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <label htmlFor="athlete" className="block text-sm font-semibold text-gray-200 mb-2">
+                          Select Athlete
+                        </label>
+                        <select
+                          id="athlete"
+                          value={selectedAthlete}
+                          onChange={(e) => setSelectedAthlete(e.target.value)}
+                          className="w-full px-4 py-3 bg-slate-700 bg-opacity-50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all"
+                        >
+                          <option value="">Select an athlete</option>
+                          {athletes.map((athlete) => (
+                            <option key={athlete.id} value={athlete.id} className="text-gray-900 bg-slate-700">
+                              {athlete.full_name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label htmlFor="coach" className="block text-sm font-semibold text-gray-200 mb-2">
+                          Select Coach
+                        </label>
+                        <select
+                          id="coach"
+                          value={selectedCoach}
+                          onChange={(e) => setSelectedCoach(e.target.value)}
+                          className="w-full px-4 py-3 bg-slate-700 bg-opacity-50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all"
+                        >
+                          <option value="">Select a coach</option>
+                          {coaches.map((coach) => (
+                            <option key={coach.id} value={coach.id} className="text-gray-900 bg-slate-700">
+                              {coach.full_name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                    <button
+                      onClick={handleAssignCoach}
+                      disabled={loading}
+                      className="bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 disabled:from-gray-400 disabled:to-gray-600 text-gray-900 font-bold py-3 px-6 rounded-lg transition-all transform hover:scale-105 shadow-xl disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {loading ? 'Assigning...' : 'Assign Coach'}
+                    </button>
+                  </div>
+
+                  {/* Current Assignments */}
+                  <div className="bg-slate-700 bg-opacity-30 rounded-lg p-6">
+                    <h3 className="text-lg font-semibold text-white mb-4">Current Coach-Athlete Assignments</h3>
+                    {assignments.length === 0 ? (
+                      <p className="text-gray-400">No assignments found.</p>
+                    ) : (
+                      <div className="space-y-3">
+                        {assignments.map((assignment) => {
+                          const coach = coaches.find((c) => c.id === assignment.coach_id)
+                          return (
+                            <div key={assignment.id} className="flex items-center justify-between p-4 bg-slate-600 bg-opacity-30 rounded-lg">
+                              <div>
+                                <p className="text-white font-semibold">{assignment.full_name}</p>
+                                <p className="text-gray-400 text-sm">
+                                  {coach ? `Assigned to: ${coach.full_name}` : 'No coach assigned'}
+                                </p>
+                              </div>
+                              {assignment.coach_id && (
+                                <button
+                                  onClick={() => handleUnassignCoach(assignment.id)}
+                                  className="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg transition-all"
+                                >
+                                  Unassign
+                                </button>
+                              )}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
