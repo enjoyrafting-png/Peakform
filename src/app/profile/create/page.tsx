@@ -89,37 +89,23 @@ export default function CreateProfilePage() {
 
     setUploadingPhoto(true)
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        alert('You must be logged in to upload a photo')
-        return
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const response = await fetch('/api/upload-photo', {
+        method: 'POST',
+        body: formData
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Upload failed')
       }
-
-      const fileExt = file.name.split('.').pop()
-      const fileName = `${user.id}-${Date.now()}.${fileExt}`
-      const filePath = `profile-photos/${fileName}`
-
-      const { error: uploadError } = await supabase.storage
-        .from('profile-photos')
-        .upload(filePath, file)
-
-      if (uploadError) {
-        // Try to create bucket if it doesn't exist
-        if (uploadError.message.includes('Bucket not found')) {
-          alert('Photo storage bucket not found. Please use a photo URL instead.')
-        } else {
-          throw uploadError
-        }
-        return
-      }
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('profile-photos')
-        .getPublicUrl(filePath)
 
       setProfileData(prev => ({
         ...prev,
-        photo: publicUrl
+        photo: data.url
       }))
     } catch (error: any) {
       alert('Error uploading photo: ' + error.message)
