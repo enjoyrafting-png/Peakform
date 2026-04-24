@@ -120,29 +120,33 @@ export default function SettingsPage() {
           // Fetch coaches and athletes if admin
           if (profileData.role === 'admin') {
             console.log('User is admin, fetching coaches and athletes...')
-            const { data: allProfiles } = await supabase
-              .from('profiles')
-              .select('*')
+            // Use API route with service role key to bypass RLS
+            const response = await fetch('/api/profiles')
+            const { profiles: allProfiles, error } = await response.json()
             
-            console.log('All profiles data:', allProfiles)
-            
-            // Log each profile's structure to see what fields exist
-            allProfiles?.forEach((p, index) => {
-              console.log(`Profile ${index}:`, p)
-              console.log(`Profile ${index} keys:`, Object.keys(p))
-              console.log(`Profile ${index} role field:`, p.role)
-              console.log(`Profile ${index} role_text field:`, p.role_text)
-            })
-            
-            const coaches = allProfiles?.filter(p => p.role === 'coach' || p.role_text === 'coach') || []
-            const athletes = allProfiles?.filter(p => p.role === 'athlete' || p.role_text === 'athlete') || []
-            
-            console.log('Filtered coaches:', coaches)
-            console.log('Filtered athletes:', athletes)
-            
-            setCoaches(coaches)
-            setAthletes(athletes)
-            setAssignments(athletes)
+            if (error) {
+              console.error('Error fetching profiles:', error)
+            } else {
+              console.log('All profiles data:', allProfiles)
+              
+              // Log each profile's structure to see what fields exist
+              allProfiles?.forEach((p: any, index: number) => {
+                console.log(`Profile ${index}:`, p)
+                console.log(`Profile ${index} keys:`, Object.keys(p))
+                console.log(`Profile ${index} role field:`, p.role)
+                console.log(`Profile ${index} role_text field:`, p.role_text)
+              })
+              
+              const coaches = allProfiles?.filter((p: any) => p.role === 'coach' || p.role_text === 'coach') || []
+              const athletes = allProfiles?.filter((p: any) => p.role === 'athlete' || p.role_text === 'athlete') || []
+              
+              console.log('Filtered coaches:', coaches)
+              console.log('Filtered athletes:', athletes)
+              
+              setCoaches(coaches)
+              setAthletes(athletes)
+              setAssignments(athletes)
+            }
           } else {
             console.log('User is not admin, skipping coach/athlete fetch')
           }
@@ -268,11 +272,10 @@ export default function SettingsPage() {
         alert('Error assigning coach. Please try again.')
       } else {
         alert('Coach assigned successfully!')
-        // Refresh assignments
-        const { data: allProfiles } = await supabase
-          .from('profiles')
-          .select('*')
-        const athletes = allProfiles?.filter(p => p.role === 'athlete' || p.role_text === 'athlete') || []
+        // Refresh assignments using API route
+        const response = await fetch('/api/profiles')
+        const { profiles: allProfiles } = await response.json()
+        const athletes = allProfiles?.filter((p: any) => p.role === 'athlete' || p.role_text === 'athlete') || []
         setAthletes(athletes)
         setAssignments(athletes)
         setSelectedAthlete('')
@@ -301,11 +304,10 @@ export default function SettingsPage() {
         alert('Error unassigning coach. Please try again.')
       } else {
         alert('Coach unassigned successfully!')
-        // Refresh assignments
-        const { data: allProfiles } = await supabase
-          .from('profiles')
-          .select('*')
-        const athletes = allProfiles?.filter(p => p.role === 'athlete' || p.role_text === 'athlete') || []
+        // Refresh assignments using API route
+        const response = await fetch('/api/profiles')
+        const { profiles: allProfiles } = await response.json()
+        const athletes = allProfiles?.filter((p: any) => p.role === 'athlete' || p.role_text === 'athlete') || []
         setAthletes(athletes)
         setAssignments(athletes)
       }
