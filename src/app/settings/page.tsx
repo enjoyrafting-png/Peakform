@@ -122,6 +122,14 @@ export default function SettingsPage() {
             
             console.log('All profiles data:', allProfiles)
             
+            // Log each profile's structure to see what fields exist
+            allProfiles?.forEach((p, index) => {
+              console.log(`Profile ${index}:`, p)
+              console.log(`Profile ${index} keys:`, Object.keys(p))
+              console.log(`Profile ${index} role field:`, p.role)
+              console.log(`Profile ${index} role_text field:`, p.role_text)
+            })
+            
             const coaches = allProfiles?.filter(p => p.role === 'coach' || p.role_text === 'coach') || []
             const athletes = allProfiles?.filter(p => p.role === 'athlete' || p.role_text === 'athlete') || []
             
