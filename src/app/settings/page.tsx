@@ -117,8 +117,8 @@ export default function SettingsPage() {
           // Fetch coaches and athletes if admin
           if (profileData.role === 'admin') {
             const [coachesData, athletesData] = await Promise.all([
-              supabase.from('profiles').select('id, full_name').eq('role', 'coach'),
-              supabase.from('profiles').select('id, full_name, coach_id').eq('role', 'athlete')
+              supabase.from('profiles').select('id, full_name').eq('role_text', 'coach'),
+              supabase.from('profiles').select('id, full_name, coach_id').eq('role_text', 'athlete')
             ])
             setCoaches(coachesData.data || [])
             setAthletes(athletesData.data || [])
@@ -250,7 +250,7 @@ export default function SettingsPage() {
         const { data: updatedAthletes } = await supabase
           .from('profiles')
           .select('id, full_name, coach_id')
-          .eq('role', 'athlete')
+          .eq('role_text', 'athlete')
         setAthletes(updatedAthletes || [])
         setAssignments(updatedAthletes || [])
         setSelectedAthlete('')
@@ -283,7 +283,7 @@ export default function SettingsPage() {
         const { data: updatedAthletes } = await supabase
           .from('profiles')
           .select('id, full_name, coach_id')
-          .eq('role', 'athlete')
+          .eq('role_text', 'athlete')
         setAthletes(updatedAthletes || [])
         setAssignments(updatedAthletes || [])
       }
