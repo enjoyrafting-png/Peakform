@@ -116,13 +116,24 @@ export default function SettingsPage() {
 
           // Fetch coaches and athletes if admin
           if (profileData.role === 'admin') {
-            const [coachesData, athletesData] = await Promise.all([
-              supabase.from('profiles').select('id, full_name').eq('role', 'coach'),
-              supabase.from('profiles').select('id, full_name, coach_id').eq('role', 'athlete')
-            ])
-            setCoaches(coachesData.data || [])
-            setAthletes(athletesData.data || [])
-            setAssignments(athletesData.data || [])
+            // First, fetch all profiles to see what data exists
+            const { data: allProfiles, error: allProfilesError } = await supabase
+              .from('profiles')
+              .select('id, full_name, role, coach_id')
+            
+            console.log('All profiles:', allProfiles)
+            console.log('All profiles error:', allProfilesError)
+            
+            // Then filter by role
+            const coaches = allProfiles?.filter(p => p.role === 'coach') || []
+            const athletes = allProfiles?.filter(p => p.role === 'athlete') || []
+            
+            console.log('Filtered coaches:', coaches)
+            console.log('Filtered athletes:', athletes)
+            
+            setCoaches(coaches)
+            setAthletes(athletes)
+            setAssignments(athletes)
           }
         }
       } catch (err) {
