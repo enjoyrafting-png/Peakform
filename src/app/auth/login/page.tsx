@@ -44,7 +44,7 @@ export default function LoginPage() {
 
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('id, username, full_name, avatar_url, website, role, created_at, updated_at')
+        .select('id, username, full_name, avatar_url, website, role, playing_role, age, created_at, updated_at')
         .eq('id', data.user?.id)
         .single()
 
@@ -57,7 +57,8 @@ export default function LoginPage() {
         return
       }
 
-      if (!profile) {
+      // Check if profile is complete (has required fields from profile creation)
+      if (!profile || !profile.playing_role || !profile.age) {
         router.push('/profile/create')
       } else {
         router.push('/dashboard')
