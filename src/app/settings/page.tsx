@@ -116,13 +116,16 @@ export default function SettingsPage() {
 
           // Fetch coaches and athletes if admin
           if (profileData.role === 'admin') {
-            const [coachesData, athletesData] = await Promise.all([
-              supabase.from('profiles').select('id, full_name').eq('role_text', 'coach'),
-              supabase.from('profiles').select('id, full_name, coach_id').eq('role_text', 'athlete')
-            ])
-            setCoaches(coachesData.data || [])
-            setAthletes(athletesData.data || [])
-            setAssignments(athletesData.data || [])
+            const { data: allProfiles } = await supabase
+              .from('profiles')
+              .select('id, full_name, role, role_text, coach_id')
+            
+            const coaches = allProfiles?.filter(p => p.role === 'coach' || p.role_text === 'coach') || []
+            const athletes = allProfiles?.filter(p => p.role === 'athlete' || p.role_text === 'athlete') || []
+            
+            setCoaches(coaches)
+            setAthletes(athletes)
+            setAssignments(athletes)
           }
         }
       } catch (err) {
@@ -247,12 +250,12 @@ export default function SettingsPage() {
       } else {
         alert('Coach assigned successfully!')
         // Refresh assignments
-        const { data: updatedAthletes } = await supabase
+        const { data: allProfiles } = await supabase
           .from('profiles')
-          .select('id, full_name, coach_id')
-          .eq('role_text', 'athlete')
-        setAthletes(updatedAthletes || [])
-        setAssignments(updatedAthletes || [])
+          .select('id, full_name, role, role_text, coach_id')
+        const athletes = allProfiles?.filter(p => p.role === 'athlete' || p.role_text === 'athlete') || []
+        setAthletes(athletes)
+        setAssignments(athletes)
         setSelectedAthlete('')
         setSelectedCoach('')
       }
@@ -280,12 +283,12 @@ export default function SettingsPage() {
       } else {
         alert('Coach unassigned successfully!')
         // Refresh assignments
-        const { data: updatedAthletes } = await supabase
+        const { data: allProfiles } = await supabase
           .from('profiles')
-          .select('id, full_name, coach_id')
-          .eq('role_text', 'athlete')
-        setAthletes(updatedAthletes || [])
-        setAssignments(updatedAthletes || [])
+          .select('id, full_name, role, role_text, coach_id')
+        const athletes = allProfiles?.filter(p => p.role === 'athlete' || p.role_text === 'athlete') || []
+        setAthletes(athletes)
+        setAssignments(athletes)
       }
     } catch (err) {
       alert('An unexpected error occurred. Please try again.')
