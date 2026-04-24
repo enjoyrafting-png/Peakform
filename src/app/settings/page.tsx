@@ -124,6 +124,11 @@ export default function SettingsPage() {
             console.log('All profiles:', allProfiles)
             console.log('All profiles error:', allProfilesError)
             
+            // Log each profile's role to see what values exist
+            allProfiles?.forEach(p => {
+              console.log(`Profile: ${p.full_name}, Role: "${p.role}"`)
+            })
+            
             // Then filter by role
             const coaches = allProfiles?.filter(p => p.role === 'coach') || []
             const athletes = allProfiles?.filter(p => p.role === 'athlete') || []
