@@ -42,6 +42,9 @@ export default function CreateProfilePage() {
     goals: ''
   })
 
+  const [photoInputType, setPhotoInputType] = useState<'url' | 'upload'>('url')
+  const [uploadingPhoto, setUploadingPhoto] = useState(false)
+
   useEffect(() => {
     const checkExistingProfile = async () => {
       try {
@@ -78,6 +81,51 @@ export default function CreateProfilePage() {
       ...prev,
       [name]: value
     }))
+  }
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploadingPhoto(true)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        alert('You must be logged in to upload a photo')
+        return
+      }
+
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${user.id}-${Date.now()}.${fileExt}`
+      const filePath = `profile-photos/${fileName}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('profile-photos')
+        .upload(filePath, file)
+
+      if (uploadError) {
+        // Try to create bucket if it doesn't exist
+        if (uploadError.message.includes('Bucket not found')) {
+          alert('Photo storage bucket not found. Please use a photo URL instead.')
+        } else {
+          throw uploadError
+        }
+        return
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('profile-photos')
+        .getPublicUrl(filePath)
+
+      setProfileData(prev => ({
+        ...prev,
+        photo: publicUrl
+      }))
+    } catch (error: any) {
+      alert('Error uploading photo: ' + error.message)
+    } finally {
+      setUploadingPhoto(false)
+    }
   }
 
   const handleVerificationConfirm = () => {
@@ -474,18 +522,71 @@ export default function CreateProfilePage() {
                   {/* Photo and Experience */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label htmlFor="photo" className="block text-sm font-semibold text-gray-200 mb-2">
-                        Photo URL
+                      <label className="block text-sm font-semibold text-gray-200 mb-2">
+                        Photo
                       </label>
-                      <input
-                        type="url"
-                        id="photo"
-                        name="photo"
-                        value={profileData.photo}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-3 bg-slate-700 bg-opacity-50 border-2 border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all"
-                        placeholder="Enter photo URL (optional)"
-                      />
+                      
+                      {/* Toggle between URL and Upload */}
+                      <div className="flex space-x-2 mb-3">
+                        <button
+                          type="button"
+                          onClick={() => setPhotoInputType('url')}
+                          className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                            photoInputType === 'url'
+                              ? 'bg-yellow-400 text-gray-900'
+                              : 'bg-slate-700 text-gray-300 hover:bg-slate-600'
+                          }`}
+                        >
+                          From URL
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPhotoInputType('upload')}
+                          className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                            photoInputType === 'upload'
+                              ? 'bg-yellow-400 text-gray-900'
+                              : 'bg-slate-700 text-gray-300 hover:bg-slate-600'
+                          }`}
+                        >
+                          Upload File
+                        </button>
+                      </div>
+
+                      {photoInputType === 'url' ? (
+                        <input
+                          type="url"
+                          id="photo"
+                          name="photo"
+                          value={profileData.photo}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-3 bg-slate-700 bg-opacity-50 border-2 border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all"
+                          placeholder="Enter photo URL (optional)"
+                        />
+                      ) : (
+                        <div className="space-y-2">
+                          <input
+                            type="file"
+                            id="photoUpload"
+                            accept="image/*"
+                            onChange={handlePhotoUpload}
+                            disabled={uploadingPhoto}
+                            aria-label="Upload photo from computer"
+                            className="w-full px-4 py-3 bg-slate-700 bg-opacity-50 border-2 border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                          />
+                          {uploadingPhoto && (
+                            <p className="text-sm text-yellow-400">Uploading photo...</p>
+                          )}
+                          {profileData.photo && (
+                            <div className="mt-2">
+                              <img
+                                src={profileData.photo}
+                                alt="Preview"
+                                className="w-24 h-24 object-cover rounded-lg border border-slate-600"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     <div>
