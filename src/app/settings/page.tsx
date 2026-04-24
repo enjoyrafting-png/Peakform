@@ -116,29 +116,13 @@ export default function SettingsPage() {
 
           // Fetch coaches and athletes if admin
           if (profileData.role === 'admin') {
-            // First, fetch all profiles to see what data exists
-            const { data: allProfiles, error: allProfilesError } = await supabase
-              .from('profiles')
-              .select('id, full_name, role, coach_id')
-            
-            console.log('All profiles:', allProfiles)
-            console.log('All profiles error:', allProfilesError)
-            
-            // Log each profile's role to see what values exist
-            allProfiles?.forEach(p => {
-              console.log(`Profile: ${p.full_name}, Role: "${p.role}"`)
-            })
-            
-            // Then filter by role
-            const coaches = allProfiles?.filter(p => p.role === 'coach') || []
-            const athletes = allProfiles?.filter(p => p.role === 'athlete') || []
-            
-            console.log('Filtered coaches:', coaches)
-            console.log('Filtered athletes:', athletes)
-            
-            setCoaches(coaches)
-            setAthletes(athletes)
-            setAssignments(athletes)
+            const [coachesData, athletesData] = await Promise.all([
+              supabase.from('profiles').select('id, full_name').eq('role', 'coach'),
+              supabase.from('profiles').select('id, full_name, coach_id').eq('role', 'athlete')
+            ])
+            setCoaches(coachesData.data || [])
+            setAthletes(athletesData.data || [])
+            setAssignments(athletesData.data || [])
           }
         }
       } catch (err) {
@@ -774,6 +758,25 @@ export default function SettingsPage() {
                   {/* Assign Coach Form */}
                   <div className="bg-slate-700 bg-opacity-30 rounded-lg p-6 mb-8">
                     <h3 className="text-lg font-semibold text-white mb-4">Assign Coach to Athlete</h3>
+                    {coaches.length === 0 && athletes.length === 0 ? (
+                      <div className="bg-yellow-900 bg-opacity-30 border border-yellow-600 rounded-lg p-4 mb-4">
+                        <p className="text-yellow-300 text-sm">
+                          No coaches or athletes found. Please create coach and athlete accounts first via the signup page before assigning them.
+                        </p>
+                      </div>
+                    ) : coaches.length === 0 ? (
+                      <div className="bg-yellow-900 bg-opacity-30 border border-yellow-600 rounded-lg p-4 mb-4">
+                        <p className="text-yellow-300 text-sm">
+                          No coaches found. Please create a coach account first via the signup page.
+                        </p>
+                      </div>
+                    ) : athletes.length === 0 ? (
+                      <div className="bg-yellow-900 bg-opacity-30 border border-yellow-600 rounded-lg p-4 mb-4">
+                        <p className="text-yellow-300 text-sm">
+                          No athletes found. Please create an athlete account first via the signup page.
+                        </p>
+                      </div>
+                    ) : null}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                       <div>
                         <label htmlFor="athlete" className="block text-sm font-semibold text-gray-200 mb-2">
@@ -783,7 +786,8 @@ export default function SettingsPage() {
                           id="athlete"
                           value={selectedAthlete}
                           onChange={(e) => setSelectedAthlete(e.target.value)}
-                          className="w-full px-4 py-3 bg-slate-700 bg-opacity-50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all"
+                          disabled={athletes.length === 0}
+                          className="w-full px-4 py-3 bg-slate-700 bg-opacity-50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           <option value="">Select an athlete</option>
                           {athletes.map((athlete) => (
@@ -801,7 +805,8 @@ export default function SettingsPage() {
                           id="coach"
                           value={selectedCoach}
                           onChange={(e) => setSelectedCoach(e.target.value)}
-                          className="w-full px-4 py-3 bg-slate-700 bg-opacity-50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all"
+                          disabled={coaches.length === 0}
+                          className="w-full px-4 py-3 bg-slate-700 bg-opacity-50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           <option value="">Select a coach</option>
                           {coaches.map((coach) => (
@@ -814,7 +819,7 @@ export default function SettingsPage() {
                     </div>
                     <button
                       onClick={handleAssignCoach}
-                      disabled={loading}
+                      disabled={loading || coaches.length === 0 || athletes.length === 0}
                       className="bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 disabled:from-gray-400 disabled:to-gray-600 text-gray-900 font-bold py-3 px-6 rounded-lg transition-all transform hover:scale-105 shadow-xl disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {loading ? 'Assigning...' : 'Assign Coach'}
