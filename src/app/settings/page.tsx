@@ -263,18 +263,27 @@ export default function SettingsPage() {
 
     setLoading(true)
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ coach_id: selectedCoach })
-        .eq('id', selectedAthlete)
+      // Use API route with service role key to bypass RLS
+      const response = await fetch('/api/profiles', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          athleteId: selectedAthlete,
+          coachId: selectedCoach
+        })
+      })
 
-      if (error) {
-        alert('Error assigning coach. Please try again.')
+      const data = await response.json()
+
+      if (!response.ok) {
+        alert('Error assigning coach: ' + (data.error || 'Unknown error'))
       } else {
         alert('Coach assigned successfully!')
         // Refresh assignments using API route
-        const response = await fetch('/api/profiles')
-        const { profiles: allProfiles } = await response.json()
+        const profilesResponse = await fetch('/api/profiles')
+        const { profiles: allProfiles } = await profilesResponse.json()
         const athletes = allProfiles?.filter((p: any) => p.role === 'athlete' || p.role_text === 'athlete') || []
         setAthletes(athletes)
         setAssignments(athletes)
@@ -295,18 +304,27 @@ export default function SettingsPage() {
 
     setLoading(true)
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ coach_id: null })
-        .eq('id', athleteId)
+      // Use API route with service role key to bypass RLS
+      const response = await fetch('/api/profiles', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          athleteId: athleteId,
+          coachId: null
+        })
+      })
 
-      if (error) {
-        alert('Error unassigning coach. Please try again.')
+      const data = await response.json()
+
+      if (!response.ok) {
+        alert('Error unassigning coach: ' + (data.error || 'Unknown error'))
       } else {
         alert('Coach unassigned successfully!')
         // Refresh assignments using API route
-        const response = await fetch('/api/profiles')
-        const { profiles: allProfiles } = await response.json()
+        const profilesResponse = await fetch('/api/profiles')
+        const { profiles: allProfiles } = await profilesResponse.json()
         const athletes = allProfiles?.filter((p: any) => p.role === 'athlete' || p.role_text === 'athlete') || []
         setAthletes(athletes)
         setAssignments(athletes)
