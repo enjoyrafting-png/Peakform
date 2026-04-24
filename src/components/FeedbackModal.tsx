@@ -71,14 +71,19 @@ export default function FeedbackModal({ isOpen, onClose, onSubmit }: FeedbackMod
 
     setIsEnhancing(true)
     try {
+      console.log('Original message:', message)
       // Simple AI enhancement - condense and make professional
       const enhanced = await fetch('/api/enhance-feedback', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message })
       }).then(res => res.json())
-      .then(data => data.enhanced || message)
-      .catch(() => {
+      .then(data => {
+        console.log('Enhanced message:', data.enhanced)
+        return data.enhanced || message
+      })
+      .catch((error) => {
+        console.error('Enhancement error:', error)
         // Fallback: simple truncation and cleanup
         return message
           .replace(/\s+/g, ' ')
@@ -89,6 +94,7 @@ export default function FeedbackModal({ isOpen, onClose, onSubmit }: FeedbackMod
       setMessage(enhanced)
       setCharCount(enhanced.length)
     } catch (err) {
+      console.error('Enhancement error:', err)
       // Fallback enhancement
       const cleaned = message.replace(/\s+/g, ' ').trim().slice(0, maxLength)
       setMessage(cleaned)
