@@ -10,28 +10,30 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey)
 // Service role client for admin operations
 const supabaseAdmin = supabaseServiceKey ? createClient(supabaseUrl, supabaseServiceKey) : supabase
 
-async function getCurrentUser() {
+async function getCurrentUser(request: Request) {
   try {
+    // First try Authorization header
+    const authHeader = request.headers.get('authorization')
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring(7)
+      const { data: { user }, error } = await supabase.auth.getUser(token)
+      
+      if (!error && user) {
+        return user
+      }
+    }
+
+    // Fallback to cookie-based auth
     const cookieStore = await cookies()
-    
-    // Try multiple possible cookie names for Supabase auth
     const token = cookieStore.get('sb-access-token')?.value ||
                   cookieStore.get('sb:token')?.value ||
                   cookieStore.get('supabase-auth-token')?.value
-    
-    console.log('Cookie check - sb-access-token:', !!cookieStore.get('sb-access-token')?.value)
-    console.log('Cookie check - sb:token:', !!cookieStore.get('sb:token')?.value)
-    console.log('Cookie check - supabase-auth-token:', !!cookieStore.get('supabase-auth-token')?.value)
-    console.log('Token found:', !!token)
     
     if (!token) {
       return null
     }
 
     const { data: { user }, error } = await supabase.auth.getUser(token)
-    
-    console.log('Auth getUser error:', error)
-    console.log('Auth getUser user:', !!user)
     
     if (error || !user) {
       return null
@@ -46,7 +48,7 @@ async function getCurrentUser() {
 
 export async function POST(request: Request) {
   try {
-    const user = await getCurrentUser()
+    const user = await getCurrentUser(request)
     
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 })

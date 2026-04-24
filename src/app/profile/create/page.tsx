@@ -46,6 +46,7 @@ export default function CreateProfilePage() {
 
   const [photoInputType, setPhotoInputType] = useState<'url' | 'upload'>('url')
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
+  const [photoPreview, setPhotoPreview] = useState<string>('')
 
   useEffect(() => {
     const checkExistingProfile = async () => {
@@ -89,13 +90,26 @@ export default function CreateProfilePage() {
     const file = e.target.files?.[0]
     if (!file) return
 
+    // Create preview URL for local file
+    const previewUrl = URL.createObjectURL(file)
+    setPhotoPreview(previewUrl)
+
     setUploadingPhoto(true)
     try {
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      if (!session) {
+        throw new Error('Not authenticated')
+      }
+
       const formData = new FormData()
       formData.append('file', file)
 
       const response = await fetch('/api/upload-photo', {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        },
         body: formData
       })
 
@@ -109,8 +123,14 @@ export default function CreateProfilePage() {
         ...prev,
         photo: data.url
       }))
+      // Clear preview after successful upload
+      URL.revokeObjectURL(previewUrl)
+      setPhotoPreview('')
     } catch (error: any) {
       showError('Error uploading photo: ' + error.message)
+      // Clear preview on error
+      URL.revokeObjectURL(previewUrl)
+      setPhotoPreview('')
     } finally {
       setUploadingPhoto(false)
     }
@@ -563,10 +583,10 @@ export default function CreateProfilePage() {
                           {uploadingPhoto && (
                             <p className="text-sm text-yellow-400">Uploading photo...</p>
                           )}
-                          {profileData.photo && (
+                          {(photoPreview || profileData.photo) && (
                             <div className="mt-2">
                               <img
-                                src={profileData.photo}
+                                src={photoPreview || profileData.photo}
                                 alt="Preview"
                                 className="w-24 h-24 object-cover rounded-lg border border-slate-600"
                               />
